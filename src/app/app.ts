@@ -4,10 +4,11 @@ import { ThemeService } from './core/services/theme.service';
 import { ToastService } from './core/services/toast.service';
 import { DbService } from './core/data/db.service';
 import { NotificationService } from './core/services/notification.service';
+import { Icon } from './shared/icon';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, Icon],
   templateUrl: './app.html',
 })
 export class App {
@@ -21,10 +22,10 @@ export class App {
   );
 
   protected readonly navLinks = [
-    { path: '/search', label: 'Search', icon: '🔍' },
-    { path: '/watchlist', label: 'Watch List', icon: '📺' },
-    { path: '/calendar', label: 'Calendar', icon: '📅' },
-    { path: '/stats', label: 'Stats', icon: '📊' },
+    { path: '/search', label: 'Search', icon: 'search' as const },
+    { path: '/watchlist', label: 'Watch List', icon: 'tv' as const },
+    { path: '/calendar', label: 'Calendar', icon: 'calendar' as const },
+    { path: '/stats', label: 'Stats', icon: 'bar-chart' as const },
   ];
 
   constructor() {

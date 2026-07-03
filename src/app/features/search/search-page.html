@@ -64,8 +64,8 @@
             <p class="text-[0.85rem] text-muted m-0 line-clamp-2 sm:line-clamp-3">
               {{ result.overview || 'No summary available yet.' }}
             </p>
-            <div class="flex justify-between text-[0.8rem] text-muted">
-              <span>⭐ {{ result.vote_average | number: '1.1-1' }}</span>
+            <div class="flex justify-between items-center text-[0.8rem] text-muted">
+              <span class="inline-flex items-center gap-1"><app-icon name="star" [size]="14" /> {{ result.vote_average | number: '1.1-1' }}</span>
               <span>{{ result.first_air_date || 'TBA' }}</span>
             </div>
             <button
@@ -82,7 +82,7 @@
             [attr.aria-label]="isTracked(result.id) ? 'Untrack' : 'Track'"
             (click)="toggleTrack(result)"
           >
-            <span aria-hidden="true">{{ isTracked(result.id) ? '✓' : '+' }}</span>
+            <app-icon [name]="isTracked(result.id) ? 'check' : 'plus'" [size]="16" />
           </button>
         </article>
       }

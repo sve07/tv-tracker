@@ -27,7 +27,7 @@
         routerLinkActive="border-primary text-primary"
         aria-label="Alerts"
       >
-        🔔
+        <app-icon name="bell" [size]="18" />
         @if (unreadNotificationCount() > 0) {
           <span class="badge">{{ unreadNotificationCount() }}</span>
         }
@@ -38,7 +38,7 @@
         routerLinkActive="border-primary text-primary"
         aria-label="Settings"
       >
-        ⚙️
+        <app-icon name="settings" [size]="18" />
       </a>
       <button
         type="button"
@@ -49,7 +49,7 @@
           theme.theme() === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'
         "
       >
-        {{ theme.theme() === 'dark' ? '🌙' : '☀️' }}
+        <app-icon [name]="theme.theme() === 'dark' ? 'moon' : 'sun'" [size]="18" />
       </button>
     </div>
   </header>
@@ -68,8 +68,8 @@
         [routerLink]="link.path"
         routerLinkActive="text-primary"
       >
-        <span class="relative text-[1.15rem] leading-none" aria-hidden="true">
-          {{ link.icon }}
+        <span class="relative leading-none" aria-hidden="true">
+          <app-icon [name]="link.icon" [size]="18" />
         </span>
         <span class="whitespace-nowrap">{{ link.label }}</span>
       </a>
@@ -90,7 +90,7 @@
           (click)="dismissToast(item.id)"
           aria-label="Dismiss"
         >
-          ✕
+          <app-icon name="x" [size]="14" />
         </button>
       </div>
     }

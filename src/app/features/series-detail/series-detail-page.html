@@ -62,7 +62,7 @@
               (click)="toggleSeason(season)"
             >
               <span>{{ season.name }} ({{ season.episodeCount }} episodes)</span>
-              <span aria-hidden="true">{{ season.expanded ? '▲' : '▼' }}</span>
+              <app-icon [name]="season.expanded ? 'chevron-up' : 'chevron-down'" [size]="18" />
             </button>
             <button
               type="button"
@@ -85,7 +85,7 @@
               title="Mark season watched"
               (click)="toggleSeasonWatched(season)"
             >
-              <span aria-hidden="true">👁</span>
+              <app-icon name="eye" [size]="16" />
             </button>
           </div>
 
@@ -159,7 +159,7 @@
                         )
                       "
                     >
-                      <span aria-hidden="true">👁</span>
+                      <app-icon name="eye" [size]="16" />
                     </button>
                   </a>
                 }

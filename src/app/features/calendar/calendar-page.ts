@@ -5,6 +5,7 @@ import { TmdbApiService } from '../../core/api/tmdb-api.service';
 import { DbService } from '../../core/data/db.service';
 import { toLocalDateKey, todayLocalDateKey } from '../../core/utils/date.util';
 import { hideBrokenImage } from '../../core/utils/image.util';
+import { Icon } from '../../shared/icon';
 import type { TrackedSeries } from '../../core/models/domain.model';
 
 interface CalendarEntry {
@@ -71,7 +72,7 @@ function buildMonthGrid(monthStart: Date): CalendarDay[][] {
  */
 @Component({
   selector: 'app-calendar-page',
-  imports: [RouterLink],
+  imports: [RouterLink, Icon],
   templateUrl: './calendar-page.html',
 })
 export class CalendarPage {

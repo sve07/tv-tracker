@@ -13,13 +13,14 @@ import {
 } from 'rxjs';
 import { RouterLink } from '@angular/router';
 import { TmdbApiService } from '../../core/api/tmdb-api.service';
+import { Icon } from '../../shared/icon';
 import { DbService } from '../../core/data/db.service';
 import { hideBrokenImage } from '../../core/utils/image.util';
 import type { TmdbTvSearchResult } from '../../core/models/tmdb.model';
 
 @Component({
   selector: 'app-search-page',
-  imports: [RouterLink, DecimalPipe],
+  imports: [RouterLink, DecimalPipe, Icon],
   templateUrl: './search-page.html',
 })
 export class SearchPage {

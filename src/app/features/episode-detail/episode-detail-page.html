@@ -8,8 +8,8 @@
   } @else {
     @let ep = episode()!;
     @let status = airDateStatus(ep.air_date);
-    <a class="inline-block mb-4 text-muted text-[0.9rem]" [routerLink]="['/series', seriesId()]"
-      >← Back to series</a
+    <a class="inline-flex items-center gap-1 mb-4 text-muted text-[0.9rem]" [routerLink]="['/series', seriesId()]"
+      ><app-icon name="chevron-left" [size]="16" /> Back to series</a
     >
 
     <div class="flex items-start gap-3 [touch-action:pan-y]">
@@ -20,7 +20,7 @@
         (click)="goToPrevious()"
         aria-label="Previous episode"
       >
-        ‹
+        <app-icon name="chevron-left" [size]="20" />
       </button>
 
       <div
@@ -96,7 +96,7 @@
             [title]="isReleased() ? null : 'Not released yet'"
             (click)="toggleWatched()"
           >
-            <span aria-hidden="true">👁</span>
+            <app-icon name="eye" [size]="18" />
           </button>
 
           @if (ep.guest_stars.length > 0) {
@@ -140,7 +140,7 @@
         (click)="goToNext()"
         aria-label="Next episode"
       >
-        ›
+        <app-icon name="chevron-right" [size]="20" />
       </button>
     </div>
   }

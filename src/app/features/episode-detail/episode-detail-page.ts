@@ -6,13 +6,14 @@ import { TmdbApiService } from '../../core/api/tmdb-api.service';
 import { DbService } from '../../core/data/db.service';
 import { todayLocalDateKey } from '../../core/utils/date.util';
 import { hideBrokenImage } from '../../core/utils/image.util';
+import { Icon } from '../../shared/icon';
 import type { TmdbEpisodeDetails } from '../../core/models/tmdb.model';
 
 const SWIPE_THRESHOLD_PX = 60;
 
 @Component({
   selector: 'app-episode-detail-page',
-  imports: [RouterLink],
+  imports: [RouterLink, Icon],
   templateUrl: './episode-detail-page.html',
   host: { class: 'block' },
 })

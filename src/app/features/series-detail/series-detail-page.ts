@@ -6,6 +6,7 @@ import { TmdbApiService } from '../../core/api/tmdb-api.service';
 import { DbService } from '../../core/data/db.service';
 import { todayLocalDateKey } from '../../core/utils/date.util';
 import { hideBrokenImage } from '../../core/utils/image.util';
+import { Icon } from '../../shared/icon';
 import type { TmdbSeasonDetails, TmdbTvDetails } from '../../core/models/tmdb.model';
 
 interface SeasonState {
@@ -22,7 +23,7 @@ type AirDateStatus = 'past' | 'today' | 'upcoming' | 'unknown';
 
 @Component({
   selector: 'app-series-detail-page',
-  imports: [RouterLink],
+  imports: [RouterLink, Icon],
   templateUrl: './series-detail-page.html',
 })
 export class SeriesDetailPage {
