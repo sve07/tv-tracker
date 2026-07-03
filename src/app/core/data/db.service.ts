@@ -178,4 +178,24 @@ export class DbService {
   async clearNotifications(): Promise<void> {
     await this.db.notifications.clear();
   }
+
+  /**
+   * Wipes all tracked series, watch history, and notification history — but
+   * deliberately leaves the `settings` record (theme, TMDB access token)
+   * alone, since those are app preferences rather than "tracked data" and
+   * the user would otherwise have to re-enter their token.
+   */
+  async deleteAllData(): Promise<void> {
+    await this.db.transaction(
+      'rw',
+      [this.db.trackedSeries, this.db.watchedEpisodes, this.db.notifications],
+      async () => {
+        await Promise.all([
+          this.db.trackedSeries.clear(),
+          this.db.watchedEpisodes.clear(),
+          this.db.notifications.clear(),
+        ]);
+      },
+    );
+  }
 }

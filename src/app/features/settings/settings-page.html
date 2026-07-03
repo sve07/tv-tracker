@@ -4,10 +4,11 @@
   <section class="mb-8 pb-6 border-b border-border">
     <h2 class="mb-3">TMDB API Access Token</h2>
     <p class="text-muted text-[0.85rem] max-w-[60ch]">
-      Required to fetch series data from TMDB. Get a free "API Read Access Token" (not the
-      shorter v3 API key) at
-      <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener">themoviedb.org/settings/api</a>.
-      Stored locally in this browser only — never sent anywhere except TMDB itself.
+      Required to fetch series data from TMDB. Get a free "API Read Access Token" (not the shorter
+      v3 API key) at
+      <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener"
+        >themoviedb.org/settings/api</a
+      >. Stored locally in this browser only — never sent anywhere except TMDB itself.
     </p>
     <div class="flex flex-wrap gap-2 items-center mt-2">
       <input
@@ -82,5 +83,20 @@
     @if (importing()) {
       <p class="text-muted text-[0.85rem] max-w-[60ch]">Importing…</p>
     }
+  </section>
+
+  <section>
+    <h2 class="mb-3">Danger Zone</h2>
+    <p class="text-muted text-[0.85rem] max-w-[60ch]">
+      Permanently deletes all tracked series, watch history, and notifications from this browser.
+      Your theme and TMDB access token are kept. This cannot be undone.
+    </p>
+    <button
+      type="button"
+      class="inline-flex items-center justify-center border border-danger bg-transparent text-danger rounded-sm py-2 px-4 cursor-pointer font-semibold hover:bg-danger hover:text-white"
+      (click)="deleteAllData()"
+    >
+      Delete all data
+    </button>
   </section>
 </section>

@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { DbService } from '../../core/data/db.service';
@@ -24,6 +24,9 @@ export class WatchlistPage {
   private readonly db = inject(DbService);
   private readonly tmdb = inject(TmdbApiService);
   protected readonly hideBrokenImage = hideBrokenImage;
+
+  /** Off by default — up-to-date-but-still-ongoing shows are hidden unless the user opts in. */
+  protected readonly showUpToDate = signal(false);
 
   private readonly seriesWithProgress = computed<SeriesProgress[]>(() =>
     this.db
@@ -62,12 +65,18 @@ export class WatchlistPage {
     ),
   );
 
-  protected readonly hasWatched = computed(
+  /** Used to decide whether the "Watched" section (and its filter toggle) should render at all
+   *  — deliberately ignores the up-to-date filter, since the toggle itself must stay reachable. */
+  protected readonly anyWatched = computed(
     () =>
       this.watchedEnded().length > 0 ||
       this.watchedCanceled().length > 0 ||
       this.watchedUpToDate().length > 0,
   );
+
+  protected toggleShowUpToDate(): void {
+    this.showUpToDate.update((current) => !current);
+  }
 
   protected imageUrl(path: string | null): string | null {
     return this.tmdb.imageUrl(path);

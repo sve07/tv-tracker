@@ -1,7 +1,7 @@
 <section>
   <h1>Watch List</h1>
 
-  @if (inProgress().length === 0 && !hasWatched()) {
+  @if (inProgress().length === 0 && !anyWatched()) {
     <div class="empty-state">
       <p>You're not tracking any series yet.</p>
       <a routerLink="/search">Search for a series to track</a>
@@ -22,12 +22,24 @@
       <p class="empty-state">Nothing in progress right now — search for a series to track.</p>
     }
 
-    @if (hasWatched()) {
+    @if (anyWatched()) {
       <section class="mt-8 pt-6 border-t border-border">
-        <h2>Watched</h2>
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <h2 class="m-0">Watched</h2>
+          @if (watchedUpToDate().length > 0) {
+            <label class="flex items-center gap-2 text-[0.85rem] text-muted cursor-pointer">
+              <input
+                type="checkbox"
+                [checked]="showUpToDate()"
+                (change)="toggleShowUpToDate()"
+              />
+              Show up-to-date shows
+            </label>
+          }
+        </div>
 
-        @if (watchedUpToDate().length > 0) {
-          <h3 class="text-[0.95rem] text-muted m-0">Up to date</h3>
+        @if (showUpToDate() && watchedUpToDate().length > 0) {
+          <h3 class="text-[0.95rem] text-muted m-0 mt-4">Up to date</h3>
           <div
             class="grid grid-cols-2 gap-4 mt-4 mb-6 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]"
           >

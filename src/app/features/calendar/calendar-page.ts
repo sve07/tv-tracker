@@ -82,9 +82,24 @@ export class CalendarPage {
   protected readonly loading = signal(true);
   private readonly entriesByDate = signal<Map<string, CalendarEntry[]>>(new Map());
 
+  /** Watched episodes are filtered out everywhere in the calendar — once you've
+   *  seen an episode, it has no reason to keep showing up as "upcoming"/"aired". */
+  private readonly visibleEntriesByDate = computed(() => {
+    const map = new Map<string, CalendarEntry[]>();
+    for (const [dateKey, entries] of this.entriesByDate()) {
+      const unwatched = entries.filter(
+        (entry) => !this.db.isEpisodeWatched(entry.seriesId, entry.seasonNumber, entry.episodeNumber),
+      );
+      if (unwatched.length > 0) {
+        map.set(dateKey, unwatched);
+      }
+    }
+    return map;
+  });
+
   protected readonly dateGroups = computed<CalendarDateGroup[]>(() => {
     const today = todayLocalDateKey();
-    return [...this.entriesByDate().entries()]
+    return [...this.visibleEntriesByDate().entries()]
       .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
       .map(([dateKey, entries]) => ({
         dateKey,
@@ -94,6 +109,20 @@ export class CalendarPage {
         entries,
       }));
   });
+
+  /** Mobile list: hides past dates by default (see `showPastMobile`). */
+  protected readonly visibleDateGroups = computed(() =>
+    this.dateGroups().filter((group) => this.showPastMobile() || !group.isPast),
+  );
+
+  protected readonly hasPastEntries = computed(() => this.dateGroups().some((group) => group.isPast));
+
+  /** Off by default — the mobile list only shows today/future dates until toggled. */
+  protected readonly showPastMobile = signal(false);
+
+  protected toggleShowPastMobile(): void {
+    this.showPastMobile.update((current) => !current);
+  }
 
   protected readonly viewMonth = signal(
     new Date(new Date().getFullYear(), new Date().getMonth(), 1),
@@ -120,7 +149,7 @@ export class CalendarPage {
   }
 
   protected entriesFor(dateKey: string): CalendarEntry[] {
-    return this.entriesByDate().get(dateKey) ?? [];
+    return this.visibleEntriesByDate().get(dateKey) ?? [];
   }
 
   private formatDateLabel(dateKey: string): string {

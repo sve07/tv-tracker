@@ -86,4 +86,16 @@ export class SettingsPage {
       this.toast.show('Notification permission was not granted.', 'info');
     }
   }
+
+  protected async deleteAllData(): Promise<void> {
+    const confirmed = window.confirm(
+      'Are you sure? This will permanently delete all tracked series, watch history, and notifications. This cannot be undone.',
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    await this.db.deleteAllData();
+    this.toast.show('All data deleted.', 'success');
+  }
 }

@@ -78,8 +78,23 @@
           <p>No known air dates yet. Track some series to see them here.</p>
         </div>
       } @else {
-        <div class="flex flex-col gap-6">
-          @for (group of dateGroups(); track group.dateKey) {
+        @if (hasPastEntries()) {
+          <button
+            type="button"
+            class="inline-flex items-center gap-1 mb-4 text-primary text-[0.85rem] bg-transparent border-none p-0 cursor-pointer"
+            (click)="toggleShowPastMobile()"
+          >
+            <app-icon [name]="showPastMobile() ? 'chevron-up' : 'chevron-left'" [size]="14" />
+            {{ showPastMobile() ? 'Hide past episodes' : 'View past episodes' }}
+          </button>
+        }
+        @if (visibleDateGroups().length === 0) {
+          <div class="empty-state">
+            <p>No upcoming episodes right now.</p>
+          </div>
+        } @else {
+          <div class="flex flex-col gap-6">
+            @for (group of visibleDateGroups(); track group.dateKey) {
             <section>
               <h2
                 class="flex items-center gap-2 text-base m-0 mb-2"
@@ -137,7 +152,8 @@
               </div>
             </section>
           }
-        </div>
+          </div>
+        }
       }
     </div>
   }

@@ -65,7 +65,10 @@
               {{ result.overview || 'No summary available yet.' }}
             </p>
             <div class="flex justify-between items-center text-[0.8rem] text-muted">
-              <span class="inline-flex items-center gap-1"><app-icon name="star" [size]="14" /> {{ result.vote_average | number: '1.1-1' }}</span>
+              <span class="inline-flex items-center gap-1"
+                ><app-icon name="star" [size]="14" />
+                {{ result.vote_average | number: '1.1-1' }}</span
+              >
               <span>{{ result.first_air_date || 'TBA' }}</span>
             </div>
             <button
