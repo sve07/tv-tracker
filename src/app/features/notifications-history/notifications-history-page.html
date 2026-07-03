@@ -1,0 +1,53 @@
+<section>
+  <header class="flex items-center justify-between mb-4">
+    <h1>Notifications</h1>
+    @if (db.notifications().length > 0) {
+      <button
+        type="button"
+        class="border border-border bg-surface text-muted rounded-sm py-2 px-3 cursor-pointer"
+        (click)="clearAll()"
+      >
+        Clear all
+      </button>
+    }
+  </header>
+
+  @if (db.notifications().length === 0) {
+    <div class="empty-state">
+      <p>No notifications yet. You'll see upcoming episodes for your tracked shows here.</p>
+    </div>
+  } @else {
+    <ul class="list-none m-0 p-0 flex flex-col gap-2">
+      @for (entry of db.notifications(); track entry.id) {
+        <li
+          class="flex flex-col items-start gap-2 py-3 px-4 border border-border rounded-md bg-surface sm:flex-row sm:items-center sm:justify-between"
+          [class.border-primary]="!entry.read"
+        >
+          <a
+            class="text-inherit no-underline flex flex-col gap-1"
+            [routerLink]="[
+              '/series',
+              entry.tmdbSeriesId,
+              'season',
+              entry.seasonNumber,
+              'episode',
+              entry.episodeNumber,
+            ]"
+          >
+            <strong>{{ entry.seriesName }}</strong> — {{ entry.episodeName }}
+            <span class="text-[0.8rem] text-muted">Airs {{ entry.airDate }}</span>
+          </a>
+          @if (!entry.read) {
+            <button
+              type="button"
+              class="border border-border bg-surface text-muted rounded-sm py-2 px-3 cursor-pointer"
+              (click)="markRead(entry.id)"
+            >
+              Mark read
+            </button>
+          }
+        </li>
+      }
+    </ul>
+  }
+</section>

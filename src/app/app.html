@@ -1,0 +1,98 @@
+<div class="flex flex-col min-h-dvh">
+  <header
+    class="flex items-center justify-between gap-3 py-3 px-4 sm:px-6 bg-surface border-b border-border sticky top-0 z-10"
+  >
+    <a
+      class="font-bold text-[1.1rem] text-text no-underline whitespace-nowrap"
+      routerLink="/watchlist"
+      >TV Tracker</a
+    >
+
+    <nav class="hidden nav:flex nav:flex-1 nav:flex-wrap nav:gap-1" aria-label="Primary">
+      @for (link of navLinks; track link.path) {
+        <a
+          class="relative inline-flex items-center gap-1 px-3 py-2 rounded-sm text-muted no-underline text-[0.9rem] hover:bg-surface-raised hover:text-text"
+          [routerLink]="link.path"
+          routerLinkActive="text-primary font-semibold"
+        >
+          {{ link.label }}
+        </a>
+      }
+    </nav>
+
+    <div class="flex items-center gap-2">
+      <a
+        class="relative inline-flex items-center justify-center border border-border bg-surface-raised text-text rounded-full w-9 h-9 shrink-0 no-underline text-[1.1rem] leading-none hover:border-primary"
+        routerLink="/notifications"
+        routerLinkActive="border-primary text-primary"
+        aria-label="Alerts"
+      >
+        🔔
+        @if (unreadNotificationCount() > 0) {
+          <span class="badge">{{ unreadNotificationCount() }}</span>
+        }
+      </a>
+      <a
+        class="inline-flex items-center justify-center border border-border bg-surface-raised text-text rounded-full w-9 h-9 shrink-0 no-underline text-[1.1rem] leading-none hover:border-primary"
+        routerLink="/settings"
+        routerLinkActive="border-primary text-primary"
+        aria-label="Settings"
+      >
+        ⚙️
+      </a>
+      <button
+        type="button"
+        class="border border-border bg-surface-raised text-text rounded-full w-9 h-9 shrink-0 cursor-pointer text-[1.1rem] leading-none hover:border-primary"
+        (click)="toggleTheme()"
+        [attr.aria-pressed]="theme.theme() === 'light'"
+        [attr.aria-label]="
+          theme.theme() === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'
+        "
+      >
+        {{ theme.theme() === 'dark' ? '🌙' : '☀️' }}
+      </button>
+    </div>
+  </header>
+
+  <main class="flex-1 p-4 sm:p-6 max-w-[1200px] w-full mx-auto">
+    <router-outlet />
+  </main>
+
+  <nav
+    class="sticky bottom-0 z-10 flex bg-surface border-t border-border pb-[env(safe-area-inset-bottom,0)] sm:justify-center sm:gap-2 nav:hidden"
+    aria-label="Primary"
+  >
+    @for (link of navLinks; track link.path) {
+      <a
+        class="relative flex-1 flex flex-col items-center justify-center gap-0.5 min-h-13 p-1 text-muted no-underline text-[0.65rem] text-center sm:flex-none sm:flex-row sm:min-w-24 sm:text-[0.8rem] sm:gap-2 hover:text-primary"
+        [routerLink]="link.path"
+        routerLinkActive="text-primary"
+      >
+        <span class="relative text-[1.15rem] leading-none" aria-hidden="true">
+          {{ link.icon }}
+        </span>
+        <span class="whitespace-nowrap">{{ link.label }}</span>
+      </a>
+    }
+  </nav>
+
+  <div
+    class="fixed bottom-14 inset-x-0 flex flex-col gap-2 z-[100] p-3 nav:bottom-4 nav:left-auto nav:right-4 nav:max-w-[22rem] nav:p-0"
+    role="status"
+    aria-live="polite"
+  >
+    @for (item of toast.toasts(); track item.id) {
+      <div class="toast" [class.toast--error]="item.type === 'error'">
+        <span>{{ item.message }}</span>
+        <button
+          type="button"
+          class="toast__dismiss"
+          (click)="dismissToast(item.id)"
+          aria-label="Dismiss"
+        >
+          ✕
+        </button>
+      </div>
+    }
+  </div>
+</div>

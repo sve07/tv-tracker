@@ -1,0 +1,111 @@
+<section>
+  <h1>Watch List</h1>
+
+  @if (inProgress().length === 0 && !hasWatched()) {
+    <div class="empty-state">
+      <p>You're not tracking any series yet.</p>
+      <a routerLink="/search">Search for a series to track</a>
+    </div>
+  } @else {
+    @if (inProgress().length > 0) {
+      <div
+        class="grid grid-cols-2 gap-4 mt-4 mb-6 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]"
+      >
+        @for (item of inProgress(); track item.series.tmdbSeriesId) {
+          <ng-container
+            [ngTemplateOutlet]="seriesCard"
+            [ngTemplateOutletContext]="{ $implicit: item }"
+          />
+        }
+      </div>
+    } @else {
+      <p class="empty-state">Nothing in progress right now — search for a series to track.</p>
+    }
+
+    @if (hasWatched()) {
+      <section class="mt-8 pt-6 border-t border-border">
+        <h2>Watched</h2>
+
+        @if (watchedUpToDate().length > 0) {
+          <h3 class="text-[0.95rem] text-muted m-0">Up to date</h3>
+          <div
+            class="grid grid-cols-2 gap-4 mt-4 mb-6 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]"
+          >
+            @for (item of watchedUpToDate(); track item.series.tmdbSeriesId) {
+              <ng-container
+                [ngTemplateOutlet]="seriesCard"
+                [ngTemplateOutletContext]="{ $implicit: item }"
+              />
+            }
+          </div>
+        }
+
+        @if (watchedEnded().length > 0) {
+          <h3 class="text-[0.95rem] text-muted m-0">Ended</h3>
+          <div
+            class="grid grid-cols-2 gap-4 mt-4 mb-6 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]"
+          >
+            @for (item of watchedEnded(); track item.series.tmdbSeriesId) {
+              <ng-container
+                [ngTemplateOutlet]="seriesCard"
+                [ngTemplateOutletContext]="{ $implicit: item }"
+              />
+            }
+          </div>
+        }
+
+        @if (watchedCanceled().length > 0) {
+          <h3 class="text-[0.95rem] text-muted m-0">Canceled</h3>
+          <div
+            class="grid grid-cols-2 gap-4 mt-4 mb-6 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]"
+          >
+            @for (item of watchedCanceled(); track item.series.tmdbSeriesId) {
+              <ng-container
+                [ngTemplateOutlet]="seriesCard"
+                [ngTemplateOutletContext]="{ $implicit: item }"
+              />
+            }
+          </div>
+        }
+      </section>
+    }
+  }
+
+  <ng-template #seriesCard let-item>
+    <a
+      class="flex flex-col bg-surface border border-border rounded-lg overflow-hidden no-underline text-inherit hover:border-primary"
+      [routerLink]="['/series', item.series.tmdbSeriesId]"
+    >
+      @if (imageUrl(item.series.posterPath); as posterUrl) {
+        <img
+          class="w-full aspect-[2/3] object-cover block"
+          [src]="posterUrl"
+          [alt]="item.series.name"
+          loading="lazy"
+          (error)="hideBrokenImage($event)"
+        />
+        <div class="w-full aspect-[2/3] object-cover block poster-fallback hidden">No poster</div>
+      } @else {
+        <div class="w-full aspect-[2/3] object-cover block poster-fallback">No poster</div>
+      }
+      <div class="p-3 flex flex-col gap-2">
+        <h3 class="m-0 text-base">{{ item.series.name }}</h3>
+        <p class="m-0 text-[0.8rem] text-muted">{{ item.series.status || 'Unknown status' }}</p>
+        <div class="flex flex-col gap-1">
+          <div class="h-[6px] rounded-full bg-surface-raised overflow-hidden">
+            <div
+              class="h-full rounded-[inherit]"
+              [class.bg-primary]="
+                progressPercent(item.watchedCount, item.series.numberOfEpisodes) < 100
+              "
+              [class.bg-success]="
+                progressPercent(item.watchedCount, item.series.numberOfEpisodes) >= 100
+              "
+              [style.width.%]="progressPercent(item.watchedCount, item.series.numberOfEpisodes)"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </a>
+  </ng-template>
+</section>

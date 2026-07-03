@@ -1,0 +1,67 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Inject TMDB access token
+        # environment.ts is committed with an empty placeholder token (see
+        # src/environments/environment.ts) so the real token never lives in
+        # git history. This overwrites it only in this ephemeral CI checkout,
+        # immediately before the production build.
+        run: |
+          cat > src/environments/environment.ts <<EOF
+          export const environment = {
+            production: true,
+            tmdbAccessToken: '${{ secrets.TMDB_ACCESS_TOKEN }}',
+            tmdbApiBaseUrl: 'https://api.themoviedb.org/3',
+            tmdbImageBaseUrl: 'https://image.tmdb.org/t/p',
+          };
+          EOF
+
+      - name: Build (production)
+        # GitHub Pages project sites are served under /<repo-name>/, so the
+        # base href must match the repository name at build time.
+        run: npx ng build --configuration production --base-href "/${{ github.event.repository.name }}/"
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/tv-tracker/browser
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

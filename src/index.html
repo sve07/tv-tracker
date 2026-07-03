@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <!--
+      Applies the persisted theme before Angular/CSS load, to avoid a
+      flash-of-wrong-theme. Kept in sync afterwards by ThemeService, which is
+      the source of truth once the Dexie `settings` table has loaded.
+    -->
+    <script>
+      (function () {
+        var stored = localStorage.getItem('tv-tracker-theme');
+        document.documentElement.setAttribute('data-theme', stored === 'light' ? 'light' : 'dark');
+      })();
+    </script>
+    <title>TvTracker</title>
+    <base href="/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark light" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <link rel="manifest" href="manifest.webmanifest" />
+  </head>
+  <body>
+    <app-root></app-root>
+    <noscript>Please enable JavaScript to continue using this application.</noscript>
+  </body>
+</html>

@@ -1,0 +1,45 @@
+<section>
+  <h1>Profile Statistics</h1>
+
+  <div class="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-4 mb-8">
+    <div class="flex flex-col gap-1 p-4 rounded-lg border border-border bg-surface">
+      <span class="text-[2rem] font-bold text-primary">{{ totalEpisodesWatched() }}</span>
+      <span class="text-[0.85rem] text-muted">Episodes watched</span>
+    </div>
+    <div class="flex flex-col gap-1 p-4 rounded-lg border border-border bg-surface">
+      <span class="text-[2rem] font-bold text-primary">{{ totalWatchHours() }}h</span>
+      <span class="text-[0.85rem] text-muted">Total watch time</span>
+    </div>
+    <div class="flex flex-col gap-1 p-4 rounded-lg border border-border bg-surface">
+      <span class="text-[2rem] font-bold text-primary">{{ completedShowsCount() }}</span>
+      <span class="text-[0.85rem] text-muted">Completed shows</span>
+    </div>
+    <div class="flex flex-col gap-1 p-4 rounded-lg border border-border bg-surface">
+      <span class="text-[2rem] font-bold text-primary">{{ trackedShowsCount() }}</span>
+      <span class="text-[0.85rem] text-muted">Tracked shows</span>
+    </div>
+  </div>
+
+  <h2>Progress by series</h2>
+  @if (perSeriesProgress().length === 0) {
+    <div class="empty-state">
+      <p>Track some series to see your progress here.</p>
+    </div>
+  } @else {
+    <ul class="list-none m-0 p-0 flex flex-col gap-3">
+      @for (item of perSeriesProgress(); track item.name) {
+        <li class="grid grid-cols-1 gap-1 sm:grid-cols-[12rem_1fr] sm:items-center sm:gap-3">
+          <span class="font-semibold truncate">{{ item.name }}</span>
+          <div class="flex items-center gap-2">
+            <div class="flex-1 h-2 rounded-full bg-surface-raised overflow-hidden">
+              <div class="h-full bg-primary rounded-[inherit]" [style.width.%]="item.percent"></div>
+            </div>
+            <span class="text-[0.75rem] text-muted whitespace-nowrap"
+              >{{ item.watched }}/{{ item.total }} ({{ item.percent }}%)</span
+            >
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</section>

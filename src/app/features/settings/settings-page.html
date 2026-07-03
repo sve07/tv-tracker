@@ -1,0 +1,86 @@
+<section>
+  <h1>Settings</h1>
+
+  <section class="mb-8 pb-6 border-b border-border">
+    <h2 class="mb-3">TMDB API Access Token</h2>
+    <p class="text-muted text-[0.85rem] max-w-[60ch]">
+      Required to fetch series data from TMDB. Get a free "API Read Access Token" (not the
+      shorter v3 API key) at
+      <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener">themoviedb.org/settings/api</a>.
+      Stored locally in this browser only — never sent anywhere except TMDB itself.
+    </p>
+    <div class="flex flex-wrap gap-2 items-center mt-2">
+      <input
+        type="password"
+        autocomplete="off"
+        spellcheck="false"
+        [value]="tmdbAccessTokenInput()"
+        (input)="onTmdbAccessTokenInput($event)"
+        placeholder="Paste your TMDB API Read Access Token"
+        class="flex-1 min-w-[16rem] p-3 rounded-md border border-border bg-surface text-text focus:outline focus:outline-2 focus:outline-primary focus:outline-offset-1"
+      />
+      <button
+        type="button"
+        class="inline-flex items-center justify-center border border-primary bg-transparent text-primary rounded-sm py-2 px-4 cursor-pointer font-semibold hover:bg-primary hover:text-primary-contrast"
+        (click)="saveTmdbAccessToken()"
+      >
+        Save
+      </button>
+    </div>
+  </section>
+
+  <section class="mb-8 pb-6 border-b border-border">
+    <h2 class="mb-3">Appearance</h2>
+    <label class="flex items-center gap-2 cursor-pointer w-fit">
+      <input type="checkbox" [checked]="theme.theme() === 'dark'" (change)="theme.toggleTheme()" />
+      Dark mode
+    </label>
+  </section>
+
+  <section class="mb-8 pb-6 border-b border-border">
+    <h2 class="mb-3">Notifications</h2>
+    <p class="text-muted text-[0.85rem] max-w-[60ch]">
+      In-app notifications work whenever the app is open. Background notifications (via periodic
+      background sync) are best-effort only — supported on Chromium browsers with the app installed
+      as a PWA, and not guaranteed to fire while the app is fully closed.
+    </p>
+    <button
+      type="button"
+      class="inline-flex items-center justify-center border border-primary bg-transparent text-primary rounded-sm py-2 px-4 cursor-pointer font-semibold hover:bg-primary hover:text-primary-contrast"
+      (click)="requestNotificationPermission()"
+    >
+      {{
+        notificationPermissionRequested
+          ? 'Re-request notification permission'
+          : 'Enable notifications'
+      }}
+    </button>
+  </section>
+
+  <section class="mb-8 pb-6 border-b border-border">
+    <h2 class="mb-3">Data</h2>
+    <div class="flex flex-wrap gap-3">
+      <button
+        type="button"
+        class="inline-flex items-center justify-center border border-primary bg-transparent text-primary rounded-sm py-2 px-4 cursor-pointer font-semibold hover:bg-primary hover:text-primary-contrast"
+        (click)="exportData()"
+      >
+        Export data
+      </button>
+      <label
+        class="relative inline-flex items-center justify-center border border-primary bg-transparent text-primary rounded-sm py-2 px-4 cursor-pointer font-semibold hover:bg-primary hover:text-primary-contrast"
+      >
+        Import data
+        <input
+          type="file"
+          accept="application/json"
+          (change)="onImportFileSelected($event)"
+          hidden
+        />
+      </label>
+    </div>
+    @if (importing()) {
+      <p class="text-muted text-[0.85rem] max-w-[60ch]">Importing…</p>
+    }
+  </section>
+</section>

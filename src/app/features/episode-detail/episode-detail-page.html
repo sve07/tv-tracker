@@ -1,0 +1,147 @@
+<section>
+  @if (loading()) {
+    <div class="h-80 skeleton"></div>
+  } @else if (loadError() || !episode()) {
+    <div class="empty-state">
+      <p>Couldn't load this episode. Please try again later.</p>
+    </div>
+  } @else {
+    @let ep = episode()!;
+    @let status = airDateStatus(ep.air_date);
+    <a class="inline-block mb-4 text-muted text-[0.9rem]" [routerLink]="['/series', seriesId()]"
+      >← Back to series</a
+    >
+
+    <div class="flex items-start gap-3 [touch-action:pan-y]">
+      <button
+        type="button"
+        class="hidden sm:flex items-center justify-center shrink-0 w-10 h-10 mt-8 border border-border bg-surface text-text rounded-full text-[1.3rem] leading-none cursor-pointer enabled:hover:border-primary enabled:hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed"
+        [disabled]="!hasPrevious()"
+        (click)="goToPrevious()"
+        aria-label="Previous episode"
+      >
+        ‹
+      </button>
+
+      <div
+        class="flex flex-col gap-4 flex-1 min-w-0 sm:flex-row sm:gap-6 motion-reduce:animate-none"
+        [class.animate-episode-slide-right]="slideDirection() === 'next'"
+        [class.animate-episode-slide-left]="slideDirection() === 'previous'"
+      >
+        @if (imageUrl(ep.still_path); as stillUrl) {
+          <img
+            class="w-full shrink-0 aspect-video object-cover rounded-lg sm:w-[320px] sm:max-w-[320px]"
+            [src]="stillUrl"
+            [alt]="ep.name"
+            (error)="hideBrokenImage($event)"
+          />
+          <div
+            class="w-full shrink-0 aspect-video object-cover rounded-lg sm:w-[320px] sm:max-w-[320px] poster-fallback hidden"
+          >
+            No image available
+          </div>
+        } @else {
+          <div
+            class="w-full shrink-0 aspect-video object-cover rounded-lg sm:w-[320px] sm:max-w-[320px] poster-fallback"
+          >
+            No image available
+          </div>
+        }
+
+        <div class="flex flex-col gap-3 max-w-[60ch]">
+          <p class="m-0 text-muted text-[0.85rem]">
+            Season {{ seasonNumber() }}, Episode {{ episodeNumber() }}
+          </p>
+          <h1>{{ ep.name }}</h1>
+
+          <p class="flex items-center gap-3 m-0">
+            <span
+              class="inline-flex py-1 px-3 rounded-full text-[0.8rem] font-semibold"
+              [class.bg-accent]="status === 'today'"
+              [class.bg-primary]="status === 'upcoming'"
+              [class.bg-surface-raised]="status !== 'today' && status !== 'upcoming'"
+              [class.text-primary-contrast]="status === 'today' || status === 'upcoming'"
+              [class.text-muted]="status !== 'today' && status !== 'upcoming'"
+            >
+              {{
+                status === 'today'
+                  ? 'Airs today'
+                  : status === 'upcoming'
+                    ? 'Upcoming · ' + ep.air_date
+                    : (ep.air_date ?? 'Air date TBA')
+              }}
+            </span>
+            @if (ep.runtime) {
+              <span class="text-muted text-[0.85rem]">{{ ep.runtime }} min</span>
+            }
+          </p>
+
+          <p>
+            {{ ep.overview || 'No summary available for this episode.' }}
+          </p>
+
+          <button
+            type="button"
+            class="watched-toggle-btn watched-toggle-btn--icon watched-toggle-btn--large self-start"
+            [class.watched-toggle-btn--watched]="isWatched()"
+            [disabled]="!isWatched() && !isReleased()"
+            [attr.aria-pressed]="isWatched()"
+            [attr.aria-label]="
+              isWatched()
+                ? 'Watched. Tap to mark unwatched.'
+                : isReleased()
+                  ? 'Mark watched'
+                  : 'Not released yet'
+            "
+            [title]="isReleased() ? null : 'Not released yet'"
+            (click)="toggleWatched()"
+          >
+            <span aria-hidden="true">👁</span>
+          </button>
+
+          @if (ep.guest_stars.length > 0) {
+            <section>
+              <h2 class="mb-2">Guest Stars</h2>
+              <div class="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-3">
+                @for (guest of ep.guest_stars; track guest.credit_id) {
+                  <div class="flex flex-col items-center gap-1 text-center text-[0.8rem]">
+                    @if (imageUrl(guest.profile_path); as profileUrl) {
+                      <img
+                        class="w-full aspect-[2/3] object-cover rounded-md"
+                        [src]="profileUrl"
+                        [alt]="guest.name"
+                        loading="lazy"
+                        (error)="hideBrokenImage($event)"
+                      />
+                      <div
+                        class="w-full aspect-[2/3] object-cover rounded-md poster-fallback hidden"
+                      >
+                        No photo
+                      </div>
+                    } @else {
+                      <div class="w-full aspect-[2/3] object-cover rounded-md poster-fallback">
+                        No photo
+                      </div>
+                    }
+                    <span>{{ guest.name }}</span>
+                    <span class="text-muted">{{ guest.character }}</span>
+                  </div>
+                }
+              </div>
+            </section>
+          }
+        </div>
+      </div>
+
+      <button
+        type="button"
+        class="hidden sm:flex items-center justify-center shrink-0 w-10 h-10 mt-8 border border-border bg-surface text-text rounded-full text-[1.3rem] leading-none cursor-pointer enabled:hover:border-primary enabled:hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed"
+        [disabled]="!hasNext()"
+        (click)="goToNext()"
+        aria-label="Next episode"
+      >
+        ›
+      </button>
+    </div>
+  }
+</section>

@@ -1,0 +1,144 @@
+<section>
+  <h1>Calendar</h1>
+
+  @if (loading()) {
+    <div class="h-48 skeleton"></div>
+  } @else {
+    <!-- Desktop: full month grid -->
+    <div class="hidden sm:block">
+      <header class="flex items-center justify-center gap-4 mb-4">
+        <button
+          type="button"
+          class="border border-border bg-surface text-text rounded-sm py-1 px-3 cursor-pointer shrink-0"
+          (click)="previousMonth()"
+          aria-label="Previous month"
+        >
+          ←
+        </button>
+        <h2 class="m-0 min-w-[12rem] text-center">{{ monthLabel() }}</h2>
+        <button
+          type="button"
+          class="border border-border bg-surface text-text rounded-sm py-1 px-3 cursor-pointer shrink-0"
+          (click)="nextMonth()"
+          aria-label="Next month"
+        >
+          →
+        </button>
+      </header>
+
+      <div
+        class="grid grid-cols-7 gap-px bg-border border border-border rounded-md overflow-hidden"
+      >
+        @for (label of weekdayLabels; track label) {
+          <div class="bg-surface p-2 text-center text-[0.8rem] font-semibold text-muted">
+            {{ label }}
+          </div>
+        }
+
+        @for (week of weeks(); track $index) {
+          @for (day of week; track day.dateKey) {
+            <div
+              class="bg-surface min-h-24 p-2 flex flex-col gap-1"
+              [class.bg-bg]="!day.inCurrentMonth"
+              [class.text-muted]="!day.inCurrentMonth"
+              [class.outline]="day.isToday"
+              [class.outline-2]="day.isToday"
+              [class.outline-primary]="day.isToday"
+              [style.outline-offset]="day.isToday ? '-2px' : null"
+            >
+              <span class="text-[0.8rem] font-semibold">{{ day.date.getDate() }}</span>
+              @for (
+                entry of entriesFor(day.dateKey);
+                track entry.seriesId + '-' + entry.episodeNumber
+              ) {
+                <a
+                  class="block text-[0.72rem] p-1 rounded-sm bg-surface-raised text-primary no-underline truncate"
+                  [routerLink]="[
+                    '/series',
+                    entry.seriesId,
+                    'season',
+                    entry.seasonNumber,
+                    'episode',
+                    entry.episodeNumber,
+                  ]"
+                >
+                  {{ entry.seriesName }}: {{ entry.episodeName }}
+                </a>
+              }
+            </div>
+          }
+        }
+      </div>
+    </div>
+
+    <!-- Mobile: simple chronological list of only the dates that have entries -->
+    <div class="block sm:hidden">
+      @if (dateGroups().length === 0) {
+        <div class="empty-state">
+          <p>No known air dates yet. Track some series to see them here.</p>
+        </div>
+      } @else {
+        <div class="flex flex-col gap-6">
+          @for (group of dateGroups(); track group.dateKey) {
+            <section>
+              <h2
+                class="flex items-center gap-2 text-base m-0 mb-2"
+                [class.text-primary]="group.isToday"
+              >
+                {{ group.label }}
+                @if (group.isToday) {
+                  <span
+                    class="text-[0.65rem] font-bold py-[2px] px-2 rounded-full bg-primary text-primary-contrast"
+                    >Today</span
+                  >
+                }
+              </h2>
+              <div class="flex flex-col gap-2">
+                @for (entry of group.entries; track entry.seriesId + '-' + entry.episodeNumber) {
+                  <a
+                    class="flex flex-row gap-3 items-center py-2 px-2 border border-border rounded-md bg-surface no-underline text-inherit hover:border-primary"
+                    [routerLink]="[
+                      '/series',
+                      entry.seriesId,
+                      'season',
+                      entry.seasonNumber,
+                      'episode',
+                      entry.episodeNumber,
+                    ]"
+                  >
+                    @if (imageUrl(entry.seriesPosterPath); as posterUrl) {
+                      <img
+                        class="w-12 aspect-[2/3] object-cover rounded-md shrink-0 block"
+                        [src]="posterUrl"
+                        [alt]="entry.seriesName"
+                        loading="lazy"
+                        (error)="hideBrokenImage($event)"
+                      />
+                      <div
+                        class="w-12 aspect-[2/3] object-cover rounded-md shrink-0 block poster-fallback hidden text-[0.6rem]"
+                      >
+                        No poster
+                      </div>
+                    } @else {
+                      <div
+                        class="w-12 aspect-[2/3] object-cover rounded-md shrink-0 block poster-fallback text-[0.6rem]"
+                      >
+                        No poster
+                      </div>
+                    }
+                    <div class="flex flex-col gap-[2px] min-w-0">
+                      <span class="font-semibold text-[0.9rem] truncate">{{
+                        entry.seriesName
+                      }}</span>
+                      <span class="text-[0.8rem] text-muted truncate">{{ entry.episodeName }}</span>
+                    </div>
+                  </a>
+                }
+              </div>
+            </section>
+          }
+        </div>
+      }
+    </div>
+  }
+</section>
