@@ -30,6 +30,14 @@ export class TmdbApiService {
     return this.http.get<TmdbTvSearchResponse>(`${this.baseUrl}/search/tv`, { params });
   }
 
+  /** Popular TV series right now — used to give the Search page something
+   *  useful to show before the user has typed anything, instead of a blank
+   *  empty state. */
+  getPopularTv(page = 1): Observable<TmdbTvSearchResponse> {
+    const params = new HttpParams().set('page', page);
+    return this.http.get<TmdbTvSearchResponse>(`${this.baseUrl}/tv/popular`, { params });
+  }
+
   getTvDetails(seriesId: number): Observable<TmdbTvDetails> {
     return this.http.get<TmdbTvDetails>(`${this.baseUrl}/tv/${seriesId}`);
   }

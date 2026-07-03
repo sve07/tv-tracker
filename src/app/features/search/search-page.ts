@@ -1,5 +1,5 @@
-import { Component, inject, signal } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
+import { Component, computed, inject, signal } from '@angular/core';
+import { DecimalPipe, NgTemplateOutlet } from '@angular/common';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import {
   catchError,
@@ -20,7 +20,7 @@ import type { TmdbTvSearchResult } from '../../core/models/tmdb.model';
 
 @Component({
   selector: 'app-search-page',
-  imports: [RouterLink, DecimalPipe, Icon],
+  imports: [RouterLink, DecimalPipe, Icon, NgTemplateOutlet],
   templateUrl: './search-page.html',
 })
 export class SearchPage {
@@ -52,6 +52,21 @@ export class SearchPage {
       }),
     ),
     { initialValue: [] as TmdbTvSearchResult[] },
+  );
+
+  /** Popular shows fetched once up front, shown as recommendations before
+   *  the user has typed anything (instead of a blank "start typing" state). */
+  private readonly recommended = toSignal(
+    this.tmdb.getPopularTv().pipe(
+      map((response) => response.results),
+      catchError(() => of<TmdbTvSearchResult[]>([])),
+    ),
+    { initialValue: [] as TmdbTvSearchResult[] },
+  );
+
+  /** Recommended shows, excluding anything already tracked. */
+  protected readonly recommendedResults = computed(() =>
+    this.recommended().filter((result) => !this.db.isTracked(result.id)),
   );
 
   protected onQueryInput(event: Event): void {

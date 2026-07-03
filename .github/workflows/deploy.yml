@@ -12,7 +12,15 @@ permissions:
 
 concurrency:
   group: pages
-  cancel-in-progress: true
+  # Do NOT cancel an in-progress run: actions/deploy-pages creates a GitHub
+  # Pages deployment that must finish (or fail on its own) before another one
+  # can start. Cancelling mid-deploy leaves a stuck deployment that makes the
+  # NEXT run fail with "Deployment failed, try again later." — which is why
+  # push-triggered deploys (queued back-to-back while iterating) kept
+  # failing while manually re-running (workflow_dispatch, one at a time with
+  # a gap) always succeeded. Matches GitHub's own official Pages workflow
+  # template setting.
+  cancel-in-progress: false
 
 jobs:
   build:
