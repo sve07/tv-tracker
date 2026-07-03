@@ -30,18 +30,21 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Inject TMDB access token
+      - name: Inject TMDB access token and build timestamp
         # environment.ts is committed with an empty placeholder token (see
         # src/environments/environment.ts) so the real token never lives in
         # git history. This overwrites it only in this ephemeral CI checkout,
-        # immediately before the production build.
+        # immediately before the production build. buildTimestamp lets the
+        # Settings page show which deployed build an installed PWA is on.
         run: |
+          BUILD_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           cat > src/environments/environment.ts <<EOF
           export const environment = {
             production: true,
             tmdbAccessToken: '${{ secrets.TMDB_ACCESS_TOKEN }}',
             tmdbApiBaseUrl: 'https://api.themoviedb.org/3',
             tmdbImageBaseUrl: 'https://image.tmdb.org/t/p',
+            buildTimestamp: '$BUILD_TIMESTAMP',
           };
           EOF
 

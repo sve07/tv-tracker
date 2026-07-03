@@ -4,6 +4,7 @@ import { ExportImportService } from '../../core/services/export-import.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { DbService } from '../../core/data/db.service';
 import { ToastService } from '../../core/services/toast.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-settings-page',
@@ -19,6 +20,16 @@ export class SettingsPage {
   protected readonly importing = signal(false);
   protected readonly tmdbAccessTokenInput = signal('');
   private tokenInputInitialized = false;
+
+  /** Human-readable build identifier, shown in Settings so it's possible to
+   *  tell which deployed build/version an installed PWA is currently on
+   *  (e.g. to confirm a service worker update actually landed). Falls back
+   *  to a friendly label for builds not stamped by CI (local dev/builds). */
+  protected readonly buildInfo = environment.buildTimestamp
+    ? new Date(environment.buildTimestamp).toLocaleString()
+    : environment.production
+      ? 'Unknown (not built via CI)'
+      : 'Development build';
 
   protected get notificationPermissionRequested(): boolean {
     return this.db.settings()?.notificationPermissionRequested ?? false;

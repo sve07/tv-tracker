@@ -7,4 +7,9 @@ export const environment = {
   tmdbAccessToken: '',
   tmdbApiBaseUrl: 'https://api.themoviedb.org/3',
   tmdbImageBaseUrl: 'https://image.tmdb.org/t/p',
+  // Populated by the GitHub Actions build step with the UTC time of the build.
+  // Shown in Settings so it's possible to tell which deployed build/version an
+  // installed PWA is currently running (useful since service worker updates
+  // can lag behind a new deploy). Empty for any build not produced by CI.
+  buildTimestamp: '',
 };
