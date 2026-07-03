@@ -26,7 +26,10 @@
         class="flex flex-col gap-3 sm:grid sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))] sm:gap-4"
       >
         @for (result of recommendedResults(); track result.id) {
-          <ng-container [ngTemplateOutlet]="resultCard" [ngTemplateOutletContext]="{ $implicit: result }" />
+          <ng-container
+            [ngTemplateOutlet]="resultCard"
+            [ngTemplateOutletContext]="{ $implicit: result }"
+          />
         }
       </div>
     } @else {
@@ -43,7 +46,10 @@
       class="flex flex-col gap-3 sm:grid sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))] sm:gap-4"
     >
       @for (result of results(); track result.id) {
-        <ng-container [ngTemplateOutlet]="resultCard" [ngTemplateOutletContext]="{ $implicit: result }" />
+        <ng-container
+          [ngTemplateOutlet]="resultCard"
+          [ngTemplateOutletContext]="{ $implicit: result }"
+        />
       }
     </div>
   }
@@ -84,8 +90,7 @@
       </p>
       <div class="flex justify-between items-center text-[0.8rem] text-muted">
         <span class="inline-flex items-center gap-1"
-          ><app-icon name="star" [size]="14" />
-          {{ result.vote_average | number: '1.1-1' }}</span
+          ><app-icon name="star" [size]="14" /> {{ result.vote_average | number: '1.1-1' }}</span
         >
         <span>{{ result.first_air_date || 'TBA' }}</span>
       </div>

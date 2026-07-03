@@ -1,4 +1,5 @@
 import { Component, effect, inject, signal } from '@angular/core';
+import { SwUpdate } from '@angular/service-worker';
 import { ThemeService } from '../../core/services/theme.service';
 import { ExportImportService } from '../../core/services/export-import.service';
 import { NotificationService } from '../../core/services/notification.service';
@@ -16,8 +17,10 @@ export class SettingsPage {
   private readonly notificationService = inject(NotificationService);
   private readonly db = inject(DbService);
   private readonly toast = inject(ToastService);
+  private readonly swUpdate = inject(SwUpdate);
 
   protected readonly importing = signal(false);
+  protected readonly checkingForUpdate = signal(false);
   protected readonly tmdbAccessTokenInput = signal('');
   private tokenInputInitialized = false;
 
@@ -108,5 +111,33 @@ export class SettingsPage {
 
     await this.db.deleteAllData();
     this.toast.show('All data deleted.', 'success');
+  }
+
+  /** Manually checks for a new deployed version, and if one is found,
+   *  activates and reloads immediately — rather than waiting for the
+   *  service worker's own background check/next-navigation activation,
+   *  which can otherwise leave an installed PWA on a stale build for a
+   *  while after a new one is deployed. */
+  protected async checkForUpdate(): Promise<void> {
+    if (!this.swUpdate.isEnabled) {
+      this.toast.show('Not running as an installed app — nothing to update.', 'info');
+      return;
+    }
+
+    this.checkingForUpdate.set(true);
+    try {
+      const updateFound = await this.swUpdate.checkForUpdate();
+      if (updateFound) {
+        this.toast.show('Update found — reloading…', 'success');
+        await this.swUpdate.activateUpdate();
+        window.location.reload();
+        return;
+      }
+      this.toast.show("You're on the latest version.", 'info');
+    } catch {
+      this.toast.show('Could not check for updates. Try again later.', 'error');
+    } finally {
+      this.checkingForUpdate.set(false);
+    }
   }
 }

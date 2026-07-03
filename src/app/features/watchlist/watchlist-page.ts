@@ -128,7 +128,8 @@ export class WatchlistPage {
   /** Fully caught-up series that are still ongoing (all released episodes seen). */
   protected readonly watchedUpToDate = computed(() =>
     this.seriesWithProgress().filter(
-      (item) => isCaughtUp(item) && item.series.status !== 'Ended' && item.series.status !== 'Canceled',
+      (item) =>
+        isCaughtUp(item) && item.series.status !== 'Ended' && item.series.status !== 'Canceled',
     ),
   );
 
