@@ -95,63 +95,65 @@
         } @else {
           <div class="flex flex-col gap-6">
             @for (group of visibleDateGroups(); track group.dateKey) {
-            <section>
-              <h2
-                class="flex items-center gap-2 text-base m-0 mb-2"
-                [class.text-primary]="group.isToday"
-              >
-                {{ group.label }}
-                @if (group.isToday) {
-                  <span
-                    class="text-[0.65rem] font-bold py-[2px] px-2 rounded-full bg-primary text-primary-contrast"
-                    >Today</span
-                  >
-                }
-              </h2>
-              <div class="flex flex-col gap-2">
-                @for (entry of group.entries; track entry.seriesId + '-' + entry.episodeNumber) {
-                  <a
-                    class="flex flex-row gap-3 items-center py-2 px-2 border border-border rounded-md bg-surface no-underline text-inherit hover:border-primary"
-                    [routerLink]="[
-                      '/series',
-                      entry.seriesId,
-                      'season',
-                      entry.seasonNumber,
-                      'episode',
-                      entry.episodeNumber,
-                    ]"
-                  >
-                    @if (imageUrl(entry.seriesPosterPath); as posterUrl) {
-                      <img
-                        class="w-12 aspect-[2/3] object-cover rounded-md shrink-0 block"
-                        [src]="posterUrl"
-                        [alt]="entry.seriesName"
-                        loading="lazy"
-                        (error)="hideBrokenImage($event)"
-                      />
-                      <div
-                        class="w-12 aspect-[2/3] object-cover rounded-md shrink-0 block poster-fallback hidden text-[0.6rem]"
-                      >
-                        No poster
+              <section>
+                <h2
+                  class="flex items-center gap-2 text-base m-0 mb-2"
+                  [class.text-primary]="group.isToday"
+                >
+                  {{ group.label }}
+                  @if (group.isToday) {
+                    <span
+                      class="text-[0.65rem] font-bold py-[2px] px-2 rounded-full bg-primary text-primary-contrast"
+                      >Today</span
+                    >
+                  }
+                </h2>
+                <div class="flex flex-col gap-2">
+                  @for (entry of group.entries; track entry.seriesId + '-' + entry.episodeNumber) {
+                    <a
+                      class="flex flex-row gap-3 items-center py-2 px-2 border border-border rounded-md bg-surface no-underline text-inherit hover:border-primary"
+                      [routerLink]="[
+                        '/series',
+                        entry.seriesId,
+                        'season',
+                        entry.seasonNumber,
+                        'episode',
+                        entry.episodeNumber,
+                      ]"
+                    >
+                      @if (imageUrl(entry.seriesPosterPath); as posterUrl) {
+                        <img
+                          class="w-12 aspect-[2/3] object-cover rounded-md shrink-0 block"
+                          [src]="posterUrl"
+                          [alt]="entry.seriesName"
+                          loading="lazy"
+                          (error)="hideBrokenImage($event)"
+                        />
+                        <div
+                          class="w-12 aspect-[2/3] object-cover rounded-md shrink-0 block poster-fallback hidden text-[0.6rem]"
+                        >
+                          No poster
+                        </div>
+                      } @else {
+                        <div
+                          class="w-12 aspect-[2/3] object-cover rounded-md shrink-0 block poster-fallback text-[0.6rem]"
+                        >
+                          No poster
+                        </div>
+                      }
+                      <div class="flex flex-col gap-[2px] min-w-0">
+                        <span class="font-semibold text-[0.9rem] truncate">{{
+                          entry.seriesName
+                        }}</span>
+                        <span class="text-[0.8rem] text-muted truncate">{{
+                          entry.episodeName
+                        }}</span>
                       </div>
-                    } @else {
-                      <div
-                        class="w-12 aspect-[2/3] object-cover rounded-md shrink-0 block poster-fallback text-[0.6rem]"
-                      >
-                        No poster
-                      </div>
-                    }
-                    <div class="flex flex-col gap-[2px] min-w-0">
-                      <span class="font-semibold text-[0.9rem] truncate">{{
-                        entry.seriesName
-                      }}</span>
-                      <span class="text-[0.8rem] text-muted truncate">{{ entry.episodeName }}</span>
-                    </div>
-                  </a>
-                }
-              </div>
-            </section>
-          }
+                    </a>
+                  }
+                </div>
+              </section>
+            }
           </div>
         }
       }

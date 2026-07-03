@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { liveQuery } from 'dexie';
 import { from } from 'rxjs';
@@ -71,6 +71,67 @@ export class DbService {
     return this.trackedSeries().some((series) => series.tmdbSeriesId === tmdbSeriesId);
   }
 
+  /**
+   * Optimistic local overrides for watched/unwatched state, applied on top of
+   * the Dexie liveQuery-backed `watchedEpisodes` signal below. Writing to
+   * IndexedDB (especially a bulk season write) can take a noticeably long
+   * moment on some devices/browsers (observed on Android when installed as a
+   * PWA) — without this, watched marks would visibly disappear and then
+   * reappear while waiting for the write to land and the liveQuery to
+   * re-emit. Entries self-clear (see `effectiveWatchedKeys`) once the real
+   * signal actually agrees with the override, so there's never a visible
+   * flicker back to the old state, and on write failure they're cleared
+   * immediately to revert to the real (unwritten) state.
+   */
+  private readonly pendingWatched = signal(new Map<string, boolean>());
+
+  private setPendingWatched(keys: string[], watched: boolean): void {
+    this.pendingWatched.update((current) => {
+      const next = new Map(current);
+      for (const key of keys) {
+        next.set(key, watched);
+      }
+      return next;
+    });
+  }
+
+  private clearPendingWatched(keys: string[]): void {
+    this.pendingWatched.update((current) => {
+      const next = new Map(current);
+      for (const key of keys) {
+        next.delete(key);
+      }
+      return next;
+    });
+  }
+
+  /** The set of episodeKeys that are effectively watched right now, real data merged with any pending optimistic overrides. */
+  private effectiveWatchedKeys(): Set<string> {
+    const rawKeys = new Set(this.watchedEpisodes().map((episode) => episode.episodeKey));
+    const pending = this.pendingWatched();
+    if (pending.size > 0) {
+      const stale: string[] = [];
+      for (const [key, watched] of pending) {
+        if (rawKeys.has(key) === watched) {
+          stale.push(key);
+        }
+      }
+      if (stale.length > 0) {
+        // Defer the write so we don't mutate a signal mid-read; safe to clear
+        // now since raw data already agrees, so nothing visually changes.
+        queueMicrotask(() => this.clearPendingWatched(stale));
+      }
+      for (const [key, watched] of pending) {
+        if (watched) {
+          rawKeys.add(key);
+        } else {
+          rawKeys.delete(key);
+        }
+      }
+    }
+    return rawKeys;
+  }
+
   async setEpisodeWatched(
     tmdbSeriesId: number,
     seasonNumber: number,
@@ -79,33 +140,51 @@ export class DbService {
     watched: boolean,
   ): Promise<void> {
     const episodeKey = `${tmdbSeriesId}:${seasonNumber}:${episodeNumber}`;
-    if (watched) {
-      await this.db.watchedEpisodes.put({
-        episodeKey,
-        tmdbSeriesId,
-        seasonNumber,
-        episodeNumber,
-        watchedAt: new Date().toISOString(),
-        runtimeMinutes,
-      });
-    } else {
-      await this.db.watchedEpisodes.delete(episodeKey);
+    this.setPendingWatched([episodeKey], watched);
+    try {
+      if (watched) {
+        await this.db.watchedEpisodes.put({
+          episodeKey,
+          tmdbSeriesId,
+          seasonNumber,
+          episodeNumber,
+          watchedAt: new Date().toISOString(),
+          runtimeMinutes,
+        });
+      } else {
+        await this.db.watchedEpisodes.delete(episodeKey);
+      }
+    } catch (error) {
+      this.clearPendingWatched([episodeKey]);
+      throw error;
     }
   }
 
   isEpisodeWatched(tmdbSeriesId: number, seasonNumber: number, episodeNumber: number): boolean {
     const episodeKey = `${tmdbSeriesId}:${seasonNumber}:${episodeNumber}`;
-    return this.watchedEpisodes().some((episode) => episode.episodeKey === episodeKey);
+    return this.effectiveWatchedKeys().has(episodeKey);
   }
 
   watchedCountFor(tmdbSeriesId: number): number {
-    return this.watchedEpisodes().filter((episode) => episode.tmdbSeriesId === tmdbSeriesId).length;
+    const prefix = `${tmdbSeriesId}:`;
+    let count = 0;
+    for (const key of this.effectiveWatchedKeys()) {
+      if (key.startsWith(prefix)) {
+        count++;
+      }
+    }
+    return count;
   }
 
   watchedCountForSeason(tmdbSeriesId: number, seasonNumber: number): number {
-    return this.watchedEpisodes().filter(
-      (episode) => episode.tmdbSeriesId === tmdbSeriesId && episode.seasonNumber === seasonNumber,
-    ).length;
+    const prefix = `${tmdbSeriesId}:${seasonNumber}:`;
+    let count = 0;
+    for (const key of this.effectiveWatchedKeys()) {
+      if (key.startsWith(prefix)) {
+        count++;
+      }
+    }
+    return count;
   }
 
   /** Marks every given episode of a season as watched in a single transaction. */
@@ -115,16 +194,25 @@ export class DbService {
     episodes: { episodeNumber: number; runtimeMinutes: number | null }[],
   ): Promise<void> {
     const watchedAt = new Date().toISOString();
-    await this.db.watchedEpisodes.bulkPut(
-      episodes.map(({ episodeNumber, runtimeMinutes }) => ({
-        episodeKey: `${tmdbSeriesId}:${seasonNumber}:${episodeNumber}`,
-        tmdbSeriesId,
-        seasonNumber,
-        episodeNumber,
-        watchedAt,
-        runtimeMinutes,
-      })),
+    const keys = episodes.map(
+      ({ episodeNumber }) => `${tmdbSeriesId}:${seasonNumber}:${episodeNumber}`,
     );
+    this.setPendingWatched(keys, true);
+    try {
+      await this.db.watchedEpisodes.bulkPut(
+        episodes.map(({ episodeNumber, runtimeMinutes }) => ({
+          episodeKey: `${tmdbSeriesId}:${seasonNumber}:${episodeNumber}`,
+          tmdbSeriesId,
+          seasonNumber,
+          episodeNumber,
+          watchedAt,
+          runtimeMinutes,
+        })),
+      );
+    } catch (error) {
+      this.clearPendingWatched(keys);
+      throw error;
+    }
   }
 
   /** Removes every watched-episode record for a season (marks the whole season unwatched). */
@@ -134,7 +222,13 @@ export class DbService {
         (episode) => episode.tmdbSeriesId === tmdbSeriesId && episode.seasonNumber === seasonNumber,
       )
       .map((episode) => episode.episodeKey);
-    await this.db.watchedEpisodes.bulkDelete(keysToDelete);
+    this.setPendingWatched(keysToDelete, false);
+    try {
+      await this.db.watchedEpisodes.bulkDelete(keysToDelete);
+    } catch (error) {
+      this.clearPendingWatched(keysToDelete);
+      throw error;
+    }
   }
 
   async saveTheme(theme: Theme): Promise<void> {

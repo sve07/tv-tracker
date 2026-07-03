@@ -28,11 +28,7 @@
           <h2 class="m-0">Watched</h2>
           @if (watchedUpToDate().length > 0) {
             <label class="flex items-center gap-2 text-[0.85rem] text-muted cursor-pointer">
-              <input
-                type="checkbox"
-                [checked]="showUpToDate()"
-                (change)="toggleShowUpToDate()"
-              />
+              <input type="checkbox" [checked]="showUpToDate()" (change)="toggleShowUpToDate()" />
               Show up-to-date shows
             </label>
           }

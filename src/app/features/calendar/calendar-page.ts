@@ -88,7 +88,8 @@ export class CalendarPage {
     const map = new Map<string, CalendarEntry[]>();
     for (const [dateKey, entries] of this.entriesByDate()) {
       const unwatched = entries.filter(
-        (entry) => !this.db.isEpisodeWatched(entry.seriesId, entry.seasonNumber, entry.episodeNumber),
+        (entry) =>
+          !this.db.isEpisodeWatched(entry.seriesId, entry.seasonNumber, entry.episodeNumber),
       );
       if (unwatched.length > 0) {
         map.set(dateKey, unwatched);
@@ -115,7 +116,9 @@ export class CalendarPage {
     this.dateGroups().filter((group) => this.showPastMobile() || !group.isPast),
   );
 
-  protected readonly hasPastEntries = computed(() => this.dateGroups().some((group) => group.isPast));
+  protected readonly hasPastEntries = computed(() =>
+    this.dateGroups().some((group) => group.isPast),
+  );
 
   /** Off by default — the mobile list only shows today/future dates until toggled. */
   protected readonly showPastMobile = signal(false);
