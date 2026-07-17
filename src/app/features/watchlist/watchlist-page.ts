@@ -112,7 +112,7 @@ export class WatchlistPage {
 
   /** Series with released episodes still to watch — the actual "Watch List". */
   protected readonly inProgress = computed(() =>
-    this.seriesWithProgress().filter((item) => !isCaughtUp(item)),
+    this.seriesWithProgress().filter((item) => item.releasedCount > 0 && !isCaughtUp(item)),
   );
 
   /** Fully caught-up series whose run has ended. */

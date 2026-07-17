@@ -8,7 +8,7 @@
 
 - [x] Clicking in watch list should open the episode details, not the series overview
 
-- [ ] An episode/series should only show up in the watch list after the episode aired
+- [x] An episode/series should only show up in the watch list after the episode aired
 
 - [ ] Order of the series in the list should be sorted top to bottom based on release date (recent first) or the mark as watched date (recent first).
 
