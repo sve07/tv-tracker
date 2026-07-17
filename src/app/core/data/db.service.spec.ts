@@ -1,8 +1,12 @@
-import 'fake-indexeddb/auto';
+import Dexie from 'dexie';
+import { IDBKeyRange, indexedDB } from 'fake-indexeddb';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { DbService } from './db.service';
 import type { TrackedSeries } from '../models/domain.model';
+
+Dexie.dependencies.indexedDB = indexedDB;
+Dexie.dependencies.IDBKeyRange = IDBKeyRange;
 
 const series: TrackedSeries = {
   tmdbSeriesId: 42,
