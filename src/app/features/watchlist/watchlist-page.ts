@@ -4,13 +4,15 @@ import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { DbService } from '../../core/data/db.service';
 import { TmdbApiService } from '../../core/api/tmdb-api.service';
+import { todayLocalDateKey } from '../../core/utils/date.util';
 import { hideBrokenImage } from '../../core/utils/image.util';
 import type { TrackedSeries } from '../../core/models/domain.model';
-import type { TmdbTvDetails } from '../../core/models/tmdb.model';
+import type { TmdbEpisodeSummary, TmdbSeasonDetails } from '../../core/models/tmdb.model';
 
 interface SeriesProgress {
   series: TrackedSeries;
   watchedCount: number;
+  nextEpisode: TmdbEpisodeSummary | null;
   /** How many non-special episodes have actually aired so far, per live TMDB
    *  data — NOT the same as `series.numberOfEpisodes`, which is a snapshot
    *  from whenever the series was tracked and may already include episodes
@@ -19,6 +21,10 @@ interface SeriesProgress {
    *  live fetch is still in flight or failed, so nothing flashes into the
    *  wrong bucket before real data is available. */
   releasedCount: number;
+}
+
+interface EpisodeSnapshot {
+  releasedEpisodes: TmdbEpisodeSummary[];
 }
 
 /** True once every episode that has actually aired has been watched — the
@@ -32,23 +38,12 @@ function isCaughtUp(item: SeriesProgress): boolean {
  *  returned by the single `/tv/{id}` details call) rather than trusting the
  *  show-level `number_of_episodes` total, which can already include
  *  episodes scheduled but not yet aired. */
-function countReleasedEpisodes(details: TmdbTvDetails): number {
-  const last = details.last_episode_to_air;
-  if (!last || last.season_number === 0) {
-    return 0;
-  }
-  let count = 0;
-  for (const season of details.seasons) {
-    if (season.season_number === 0) {
-      continue; // Specials aren't counted in numberOfEpisodes either.
-    }
-    if (season.season_number < last.season_number) {
-      count += season.episode_count;
-    } else if (season.season_number === last.season_number) {
-      count += last.episode_number;
-    }
-  }
-  return count;
+function releasedEpisodes(seasons: TmdbSeasonDetails[]): TmdbEpisodeSummary[] {
+  const today = todayLocalDateKey();
+  return seasons
+    .flatMap((season) => season.episodes)
+    .filter((episode) => !!episode.air_date && episode.air_date <= today)
+    .sort((a, b) => (a.air_date ?? '').localeCompare(b.air_date ?? ''));
 }
 
 @Component({
@@ -64,29 +59,34 @@ export class WatchlistPage {
   /** Off by default — up-to-date-but-still-ongoing shows are hidden unless the user opts in. */
   protected readonly showUpToDate = signal(false);
 
-  /** Live-fetched released-episode counts, keyed by series ID — see `countReleasedEpisodes`. */
-  private readonly releasedCounts = signal<Map<number, number>>(new Map());
+  /** Released episode details, cached per series after the asynchronous TMDB season fetch. */
+  private readonly snapshots = signal<Map<number, EpisodeSnapshot>>(new Map());
 
   constructor() {
     effect(() => {
       const series = this.db.trackedSeries();
-      void this.loadReleasedCounts(series);
+      void this.loadSnapshots(series);
     });
   }
 
-  private async loadReleasedCounts(series: TrackedSeries[]): Promise<void> {
+  private async loadSnapshots(series: TrackedSeries[]): Promise<void> {
     const entries = await Promise.all(
-      series.map(async (trackedSeries): Promise<[number, number] | null> => {
+      series.map(async (trackedSeries): Promise<[number, EpisodeSnapshot] | null> => {
         try {
           const details = await firstValueFrom(this.tmdb.getTvDetails(trackedSeries.tmdbSeriesId));
-          return [trackedSeries.tmdbSeriesId, countReleasedEpisodes(details)];
+          const seasons = await Promise.all(
+            details.seasons
+              .filter((season) => season.season_number > 0)
+              .map((season) => firstValueFrom(this.tmdb.getSeason(trackedSeries.tmdbSeriesId, season.season_number))),
+          );
+          return [trackedSeries.tmdbSeriesId, { releasedEpisodes: releasedEpisodes(seasons) }];
         } catch {
           // Already toasted by the interceptor; this series just keeps its previous/fallback count.
           return null;
         }
       }),
     );
-    this.releasedCounts.update((current) => {
+    this.snapshots.update((current) => {
       const next = new Map(current);
       for (const entry of entries) {
         if (entry) {
@@ -101,9 +101,11 @@ export class WatchlistPage {
     this.db
       .trackedSeries()
       .map((series) => ({
-        series,
-        watchedCount: this.db.watchedCountFor(series.tmdbSeriesId),
-        releasedCount: this.releasedCounts().get(series.tmdbSeriesId) ?? series.numberOfEpisodes,
+        series, watchedCount: this.db.watchedCountFor(series.tmdbSeriesId),
+        releasedCount: this.snapshots().get(series.tmdbSeriesId)?.releasedEpisodes.length ?? series.numberOfEpisodes,
+        nextEpisode: this.snapshots().get(series.tmdbSeriesId)?.releasedEpisodes.find(
+          (episode) => !this.db.isEpisodeWatched(series.tmdbSeriesId, episode.season_number, episode.episode_number),
+        ) ?? null,
       }))
       .sort((a, b) => b.series.trackedAt.localeCompare(a.series.trackedAt)),
   );
