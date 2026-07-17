@@ -8,7 +8,11 @@ import { todayLocalDateKey } from '../../core/utils/date.util';
 import { hideBrokenImage } from '../../core/utils/image.util';
 import { Icon } from '../../shared/icon';
 import type { TrackedSeries } from '../../core/models/domain.model';
-import type { TmdbEpisodeSummary, TmdbSeasonDetails, TmdbTvDetails } from '../../core/models/tmdb.model';
+import type {
+  TmdbEpisodeSummary,
+  TmdbSeasonDetails,
+  TmdbTvDetails,
+} from '../../core/models/tmdb.model';
 
 interface SeasonState {
   seasonNumber: number;
@@ -51,6 +55,18 @@ export class SeriesDetailPage {
         return;
       }
       void this.loadSeries(seriesId);
+    });
+
+    effect(() => {
+      const targetId = this.timelineTargetId();
+      if (!targetId) {
+        return;
+      }
+      // Wait until Angular has rendered the timeline card, including after an
+      // optimistic watched-state update changes which card is next.
+      requestAnimationFrame(() => {
+        document.getElementById(targetId)?.scrollIntoView({ block: 'nearest', inline: 'center' });
+      });
     });
   }
 
@@ -270,10 +286,6 @@ export class SeriesDetailPage {
           .flatMap((season) => season.episodes)
           .sort((a, b) => (a.air_date ?? '').localeCompare(b.air_date ?? '')),
       );
-      queueMicrotask(() => {
-        const targetId = this.timelineTargetId();
-        document.getElementById(targetId ?? '')?.scrollIntoView({ block: 'nearest', inline: 'center' });
-      });
     } catch {
       this.loadError.set(true);
     } finally {
