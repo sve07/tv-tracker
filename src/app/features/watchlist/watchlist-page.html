@@ -82,7 +82,12 @@
   <ng-template #seriesCard let-item>
     <a
       class="flex flex-col bg-surface border border-border rounded-lg overflow-hidden no-underline text-inherit hover:border-primary"
-      [routerLink]="['/series', item.series.tmdbSeriesId]"
+      [routerLink]="
+        item.nextEpisode
+          ? ['/series', item.series.tmdbSeriesId, 'season', item.nextEpisode.season_number, 'episode', item.nextEpisode.episode_number]
+          : ['/series', item.series.tmdbSeriesId]
+      "
+      [queryParams]="{ returnTo: '/watchlist' }"
     >
       @if (imageUrl(item.series.posterPath); as posterUrl) {
         <img

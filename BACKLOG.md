@@ -6,7 +6,7 @@
 
 ## Watch list
 
-- [ ] Clicking in watch list should open the episode details, not the series overview
+- [x] Clicking in watch list should open the episode details, not the series overview
 
 - [ ] An episode/series should only show up in the watch list after the episode aired
 
