@@ -12,6 +12,13 @@ import type { TmdbEpisodeDetails, TmdbTvDetails } from '../../core/models/tmdb.m
 
 const SWIPE_THRESHOLD_PX = 60;
 
+export function episodeReturnTarget(returnTo: string | null, seriesId: number): string {
+  if (returnTo === '/watchlist' || returnTo === `/series/${seriesId}`) {
+    return returnTo;
+  }
+  return `/series/${seriesId}`;
+}
+
 @Component({
   selector: 'app-episode-detail-page',
   imports: [RouterLink, Icon],
@@ -27,10 +34,16 @@ export class EpisodeDetailPage {
   private readonly paramMap = toSignal(this.route.paramMap, {
     initialValue: this.route.snapshot.paramMap,
   });
+  private readonly queryParamMap = toSignal(this.route.queryParamMap, {
+    initialValue: this.route.snapshot.queryParamMap,
+  });
 
   protected readonly seriesId = computed(() => Number(this.paramMap().get('seriesId')));
   protected readonly seasonNumber = computed(() => Number(this.paramMap().get('seasonNumber')));
   protected readonly episodeNumber = computed(() => Number(this.paramMap().get('episodeNumber')));
+  protected readonly returnTo = computed(() =>
+    episodeReturnTarget(this.queryParamMap().get('returnTo'), this.seriesId()),
+  );
 
   protected readonly episode = signal<TmdbEpisodeDetails | null>(null);
   private readonly seriesDetails = signal<TmdbTvDetails | null>(null);
@@ -181,7 +194,10 @@ export class EpisodeDetailPage {
       this.seasonNumber(),
       'episode',
       episodeNumber,
-    ]);
+    ], {
+      queryParams: { returnTo: this.returnTo() },
+      replaceUrl: true,
+    });
   }
 
   private async loadEpisode(

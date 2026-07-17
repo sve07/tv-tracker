@@ -157,6 +157,7 @@
                       'episode',
                       episode.episode_number,
                     ]"
+                    [queryParams]="{ returnTo: '/series/' + show.id }"
                   >
                     <span class="text-muted [font-variant-numeric:tabular-nums] shrink-0">{{
                       episode.episode_number

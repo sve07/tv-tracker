@@ -28,4 +28,4 @@
 
 ## Navigation
 
-- [ ] When I go next or previous episode, and I navigate back once, I want to go back to the previous series overview, or watch list, not the previous viewed episode we navigated from.
+- [x] When I go next or previous episode, and I navigate back once, I want to go back to the previous series overview, or watch list, not the previous viewed episode we navigated from.

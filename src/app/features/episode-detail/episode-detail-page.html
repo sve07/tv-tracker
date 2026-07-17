@@ -10,8 +10,8 @@
     @let status = airDateStatus(ep.air_date);
     <a
       class="inline-flex items-center gap-1 mb-4 text-muted text-[0.9rem]"
-      [routerLink]="['/series', seriesId()]"
-      ><app-icon name="chevron-left" [size]="16" /> Back to series</a
+      [routerLink]="returnTo()"
+      ><app-icon name="chevron-left" [size]="16" /> Back</a
     >
 
     <div class="flex items-start gap-3 [touch-action:pan-y]">
