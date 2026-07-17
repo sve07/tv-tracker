@@ -2,18 +2,15 @@ import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { DbService } from '../data/db.service';
 import { TmdbApiService } from '../api/tmdb-api.service';
-import { toLocalDateKey, todayLocalDateKey } from '../utils/date.util';
+import { todayLocalDateKey } from '../utils/date.util';
 
 /** How often to re-check tracked series for upcoming episodes while the app is open. */
 const CHECK_INTERVAL_MS = 5 * 60 * 1000;
 
-/** Only notify for episodes airing within this many days from today. */
-const LOOKAHEAD_DAYS = 7;
-
 const PERIODIC_SYNC_TAG = 'tv-tracker-episode-check';
 
 /**
- * Detects upcoming episodes for tracked series and records them in the
+ * Detects newly aired episodes for tracked series and records them in the
  * `notifications` table (read by the header badge and Notifications History
  * page). This only runs while the app tab is open/foregrounded.
  *
@@ -43,15 +40,12 @@ export class NotificationService {
   async checkForUpcomingEpisodes(): Promise<void> {
     const trackedSeries = this.db.trackedSeries();
     const todayStr = todayLocalDateKey();
-    const lookaheadStr = toLocalDateKey(
-      new Date(Date.now() + LOOKAHEAD_DAYS * 24 * 60 * 60 * 1000),
-    );
 
     for (const series of trackedSeries) {
       try {
         const details = await firstValueFrom(this.tmdb.getTvDetails(series.tmdbSeriesId));
-        const next = details.next_episode_to_air;
-        if (!next?.air_date || next.air_date < todayStr || next.air_date > lookaheadStr) {
+        const lastAired = details.last_episode_to_air;
+        if (!lastAired?.air_date || lastAired.air_date > todayStr) {
           continue;
         }
 
@@ -60,8 +54,8 @@ export class NotificationService {
           .some(
             (entry) =>
               entry.tmdbSeriesId === series.tmdbSeriesId &&
-              entry.seasonNumber === next.season_number &&
-              entry.episodeNumber === next.episode_number,
+              entry.seasonNumber === lastAired.season_number &&
+              entry.episodeNumber === lastAired.episode_number,
           );
         if (alreadyRecorded) {
           continue;
@@ -69,11 +63,11 @@ export class NotificationService {
 
         await this.db.addNotification({
           tmdbSeriesId: series.tmdbSeriesId,
-          seasonNumber: next.season_number,
-          episodeNumber: next.episode_number,
+          seasonNumber: lastAired.season_number,
+          episodeNumber: lastAired.episode_number,
           seriesName: series.name,
-          episodeName: next.name,
-          airDate: next.air_date,
+          episodeName: lastAired.name,
+          airDate: lastAired.air_date,
           createdAt: new Date().toISOString(),
           read: false,
           osNotified: false,
