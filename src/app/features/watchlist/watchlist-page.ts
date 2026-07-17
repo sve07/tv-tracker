@@ -13,6 +13,7 @@ interface SeriesProgress {
   series: TrackedSeries;
   watchedCount: number;
   nextEpisode: TmdbEpisodeSummary | null;
+  activityAt: string;
   /** How many non-special episodes have actually aired so far, per live TMDB
    *  data — NOT the same as `series.numberOfEpisodes`, which is a snapshot
    *  from whenever the series was tracked and may already include episodes
@@ -25,6 +26,7 @@ interface SeriesProgress {
 
 interface EpisodeSnapshot {
   releasedEpisodes: TmdbEpisodeSummary[];
+  latestReleasedAt: string | null;
 }
 
 /** True once every episode that has actually aired has been watched — the
@@ -79,7 +81,8 @@ export class WatchlistPage {
               .filter((season) => season.season_number > 0)
               .map((season) => firstValueFrom(this.tmdb.getSeason(trackedSeries.tmdbSeriesId, season.season_number))),
           );
-          return [trackedSeries.tmdbSeriesId, { releasedEpisodes: releasedEpisodes(seasons) }];
+          const episodes = releasedEpisodes(seasons);
+          return [trackedSeries.tmdbSeriesId, { releasedEpisodes: episodes, latestReleasedAt: episodes.at(-1)?.air_date ?? null }];
         } catch {
           // Already toasted by the interceptor; this series just keeps its previous/fallback count.
           return null;
@@ -100,14 +103,18 @@ export class WatchlistPage {
   private readonly seriesWithProgress = computed<SeriesProgress[]>(() =>
     this.db
       .trackedSeries()
-      .map((series) => ({
-        series, watchedCount: this.db.watchedCountFor(series.tmdbSeriesId),
+      .map((series) => {
+        const watched = this.db.watchedEpisodes().filter((episode) => episode.tmdbSeriesId === series.tmdbSeriesId);
+        const snapshot = this.snapshots().get(series.tmdbSeriesId);
+        return {
+        series, watchedCount: watched.length,
         releasedCount: this.snapshots().get(series.tmdbSeriesId)?.releasedEpisodes.length ?? series.numberOfEpisodes,
-        nextEpisode: this.snapshots().get(series.tmdbSeriesId)?.releasedEpisodes.find(
+        nextEpisode: snapshot?.releasedEpisodes.find(
           (episode) => !this.db.isEpisodeWatched(series.tmdbSeriesId, episode.season_number, episode.episode_number),
         ) ?? null,
-      }))
-      .sort((a, b) => b.series.trackedAt.localeCompare(a.series.trackedAt)),
+        activityAt: [snapshot?.latestReleasedAt, ...watched.map((episode) => episode.watchedAt)].filter(Boolean).sort().at(-1) ?? series.trackedAt,
+      }; })
+      .sort((a, b) => b.activityAt.localeCompare(a.activityAt)),
   );
 
   /** Series with released episodes still to watch — the actual "Watch List". */

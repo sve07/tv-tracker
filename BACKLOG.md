@@ -10,7 +10,7 @@
 
 - [x] An episode/series should only show up in the watch list after the episode aired
 
-- [ ] Order of the series in the list should be sorted top to bottom based on release date (recent first) or the mark as watched date (recent first).
+- [x] Order of the series in the list should be sorted top to bottom based on release date (recent first) or the mark as watched date (recent first).
 
 - [ ] Series that are tracked but do not have marked episodes need to be in a separate subdivision "Not started yet". By default this section should be hidden, like the 'up-to-date' series section.
 
