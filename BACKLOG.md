@@ -24,7 +24,7 @@
 
 - [x] Only send a push notification after the episode aired, not in advance
 
-- [ ] Only send notifications for episodes that are released and I am currently watching. This means, or the first episode of a new season, where I completed the previous one, or any new episode of a season I am currently watching.
+- [x] Only send notifications for episodes that are released and I am currently watching. This means, or the first episode of a new season, where I completed the previous one, or any new episode of a season I am currently watching.
 
 ## Navigation
 

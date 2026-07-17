@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { DbService } from '../data/db.service';
 import { TmdbApiService } from '../api/tmdb-api.service';
+import type { TmdbEpisodeSummary } from '../models/tmdb.model';
 import { todayLocalDateKey } from '../utils/date.util';
 
 /** How often to re-check tracked series for upcoming episodes while the app is open. */
@@ -48,6 +49,9 @@ export class NotificationService {
         if (!lastAired?.air_date || lastAired.air_date > todayStr) {
           continue;
         }
+        if (!(await this.isNotificationEligible(series.tmdbSeriesId, lastAired))) {
+          continue;
+        }
 
         const alreadyRecorded = this.db
           .notifications()
@@ -76,6 +80,33 @@ export class NotificationService {
         // Network/API error for this series — already toasted by the interceptor; try again next interval.
       }
     }
+  }
+
+  private async isNotificationEligible(
+    seriesId: number,
+    episode: TmdbEpisodeSummary,
+  ): Promise<boolean> {
+    if (this.db.watchedCountForSeason(seriesId, episode.season_number) > 0) {
+      return true;
+    }
+    if (episode.season_number <= 1 || episode.episode_number !== 1) {
+      return false;
+    }
+
+    const previousSeason = await firstValueFrom(
+      this.tmdb.getSeason(seriesId, episode.season_number - 1),
+    );
+    const regularEpisodes = previousSeason.episodes.filter((previousEpisode) => previousEpisode.episode_number > 0);
+    return (
+      regularEpisodes.length > 0 &&
+      regularEpisodes.every((previousEpisode) =>
+        this.db.isEpisodeWatched(
+          seriesId,
+          previousEpisode.season_number,
+          previousEpisode.episode_number,
+        ),
+      )
+    );
   }
 
   /** Prompts for OS Notification permission. Call only from an explicit user action (e.g. a Settings toggle). */
