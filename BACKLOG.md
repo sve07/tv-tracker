@@ -14,7 +14,7 @@
 
 - [x] Series that are tracked but do not have marked episodes need to be in a separate subdivision "Not started yet". By default this section should be hidden, like the 'up-to-date' series section.
 
-- [ ] In the series card, the episode to watch next should be displayed e.g. S02E05
+- [x] In the series card, the episode to watch next should be displayed e.g. S02E05
 
 ## Series overview
 

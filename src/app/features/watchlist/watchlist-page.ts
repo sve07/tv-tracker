@@ -171,6 +171,10 @@ export class WatchlistPage {
     return this.tmdb.imageUrl(path);
   }
 
+  protected nextEpisodeLabel(episode: TmdbEpisodeSummary): string {
+    return `S${String(episode.season_number).padStart(2, '0')}E${String(episode.episode_number).padStart(2, '0')}`;
+  }
+
   protected progressPercent(watchedCount: number, totalEpisodes: number): number {
     if (!totalEpisodes) {
       return 0;
