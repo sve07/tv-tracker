@@ -7,6 +7,7 @@ import { DbService } from '../../core/data/db.service';
 import { todayLocalDateKey } from '../../core/utils/date.util';
 import { hideBrokenImage } from '../../core/utils/image.util';
 import { Icon } from '../../shared/icon';
+import type { TrackedSeries } from '../../core/models/domain.model';
 import type { TmdbSeasonDetails, TmdbTvDetails } from '../../core/models/tmdb.model';
 
 interface SeasonState {
@@ -74,16 +75,7 @@ export class SeriesDetailPage {
       await this.db.untrackSeries(details.id);
       return;
     }
-    await this.db.trackSeries({
-      tmdbSeriesId: details.id,
-      name: details.name,
-      posterPath: details.poster_path,
-      status: details.status,
-      genres: details.genres.map((genre) => genre.name),
-      numberOfSeasons: details.number_of_seasons,
-      numberOfEpisodes: details.number_of_episodes,
-      trackedAt: new Date().toISOString(),
-    });
+    await this.db.trackSeries(this.trackedSeriesMetadata(details));
   }
 
   protected async toggleSeason(season: SeasonState): Promise<void> {
@@ -144,6 +136,7 @@ export class SeriesDetailPage {
       episodeNumber,
       runtimeMinutes,
       !watched,
+      this.details() ? this.trackedSeriesMetadata(this.details()!) : undefined,
     );
   }
 
@@ -200,6 +193,19 @@ export class SeriesDetailPage {
       return 'today';
     }
     return airDate < today ? 'past' : 'upcoming';
+  }
+
+  private trackedSeriesMetadata(details: TmdbTvDetails): TrackedSeries {
+    return {
+      tmdbSeriesId: details.id,
+      name: details.name,
+      posterPath: details.poster_path,
+      status: details.status,
+      genres: details.genres.map((genre) => genre.name),
+      numberOfSeasons: details.number_of_seasons,
+      numberOfEpisodes: details.number_of_episodes,
+      trackedAt: new Date().toISOString(),
+    };
   }
 
   private updateSeason(seasonNumber: number, patch: Partial<SeasonState>): void {

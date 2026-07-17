@@ -60,6 +60,20 @@ export class DbService {
     await this.db.trackedSeries.put(series);
   }
 
+  /**
+   * Adds a series only when it is not already tracked. This deliberately does
+   * not overwrite an existing record, so manually tracked series retain their
+   * original tracking date and metadata.
+   */
+  async ensureSeriesTracked(series: TrackedSeries): Promise<void> {
+    await this.db.transaction('rw', this.db.trackedSeries, async () => {
+      const existing = await this.db.trackedSeries.get(series.tmdbSeriesId);
+      if (!existing) {
+        await this.db.trackedSeries.add(series);
+      }
+    });
+  }
+
   async untrackSeries(tmdbSeriesId: number): Promise<void> {
     await this.db.transaction('rw', this.db.trackedSeries, this.db.watchedEpisodes, async () => {
       await this.db.trackedSeries.delete(tmdbSeriesId);
@@ -138,11 +152,15 @@ export class DbService {
     episodeNumber: number,
     runtimeMinutes: number | null,
     watched: boolean,
+    seriesToTrack?: TrackedSeries,
   ): Promise<void> {
     const episodeKey = `${tmdbSeriesId}:${seasonNumber}:${episodeNumber}`;
     this.setPendingWatched([episodeKey], watched);
     try {
       if (watched) {
+        if (seriesToTrack) {
+          await this.ensureSeriesTracked(seriesToTrack);
+        }
         await this.db.watchedEpisodes.put({
           episodeKey,
           tmdbSeriesId,
