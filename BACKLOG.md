@@ -18,7 +18,7 @@
 
 ## Series overview
 
-- [ ] In the series overview, above the episode list, there should be a scrollable timeline of episodes with the "Next episode" to watch in view. This timeline should be scrollable to the left and right to see previous and next episodes. Clicking on an episode in the timeline should open the episode details. The card must also contain the mark as watched button, and the mark as watched button should be replaced with a number in days till air date for episodes that are not yet aired.
+- [x] In the series overview, above the episode list, there should be a scrollable timeline of episodes with the "Next episode" to watch in view. This timeline should be scrollable to the left and right to see previous and next episodes. Clicking on an episode in the timeline should open the episode details. The card must also contain the mark as watched button, and the mark as watched button should be replaced with a number in days till air date for episodes that are not yet aired.
 
 ## Notifications
 

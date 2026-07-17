@@ -49,6 +49,43 @@
       </div>
     </header>
 
+    @if (timelineEpisodes().length > 0) {
+      <section class="mb-8" aria-label="Episode timeline">
+        <h2 class="mb-3">Episode timeline</h2>
+        <div class="flex gap-3 overflow-x-auto pb-3 snap-x snap-mandatory">
+          @for (episode of timelineEpisodes(); track episode.id) {
+            @let released = isEpisodeReleased(episode.air_date);
+            <article
+              [id]="timelineId(episode)"
+              class="min-w-44 snap-center border border-border rounded-md bg-surface p-3 flex flex-col gap-2"
+              [class.border-primary]="timelineTargetId() === timelineId(episode)"
+            >
+              <a
+                class="no-underline text-inherit"
+                [routerLink]="['/series', show.id, 'season', episode.season_number, 'episode', episode.episode_number]"
+                [queryParams]="{ returnTo: '/series/' + show.id }"
+              >
+                <span class="block text-[0.8rem] text-muted">S{{ episode.season_number }}E{{ episode.episode_number }}</span>
+                <strong class="block truncate">{{ episode.name }}</strong>
+                <span class="block text-[0.75rem] text-muted">{{ episode.air_date || 'TBA' }}</span>
+              </a>
+              @if (released) {
+                <button
+                  type="button"
+                  class="watched-toggle-btn watched-toggle-btn--icon self-start"
+                  [class.watched-toggle-btn--watched]="isEpisodeWatched(show.id, episode.season_number, episode.episode_number)"
+                  [attr.aria-label]="isEpisodeWatched(show.id, episode.season_number, episode.episode_number) ? 'Watched. Tap to mark unwatched.' : 'Mark watched'"
+                  (click)="toggleEpisodeWatched(show.id, episode.season_number, episode.episode_number, episode.air_date, episode.runtime)"
+                ><app-icon name="eye" [size]="16" /></button>
+              } @else if (daysUntilAir(episode.air_date); as days) {
+                <span class="text-[0.8rem] text-muted">{{ days }} day{{ days === 1 ? '' : 's' }} until air</span>
+              }
+            </article>
+          }
+        </div>
+      </section>
+    }
+
     <section>
       <h2 class="mb-3">Seasons</h2>
       @for (season of seasons(); track season.seasonNumber) {

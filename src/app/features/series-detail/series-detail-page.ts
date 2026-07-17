@@ -8,7 +8,7 @@ import { todayLocalDateKey } from '../../core/utils/date.util';
 import { hideBrokenImage } from '../../core/utils/image.util';
 import { Icon } from '../../shared/icon';
 import type { TrackedSeries } from '../../core/models/domain.model';
-import type { TmdbSeasonDetails, TmdbTvDetails } from '../../core/models/tmdb.model';
+import type { TmdbEpisodeSummary, TmdbSeasonDetails, TmdbTvDetails } from '../../core/models/tmdb.model';
 
 interface SeasonState {
   seasonNumber: number;
@@ -41,6 +41,7 @@ export class SeriesDetailPage {
   protected readonly loading = signal(true);
   protected readonly loadError = signal(false);
   protected readonly seasons = signal<SeasonState[]>([]);
+  protected readonly timelineEpisodes = signal<TmdbEpisodeSummary[]>([]);
   protected readonly hideBrokenImage = hideBrokenImage;
 
   constructor() {
@@ -195,6 +196,32 @@ export class SeriesDetailPage {
     return airDate < today ? 'past' : 'upcoming';
   }
 
+  protected daysUntilAir(airDate: string | null): number | null {
+    if (!airDate || this.isEpisodeReleased(airDate)) {
+      return null;
+    }
+    const today = new Date(`${todayLocalDateKey()}T00:00:00`);
+    const airDay = new Date(`${airDate}T00:00:00`);
+    return Math.max(0, Math.ceil((airDay.getTime() - today.getTime()) / 86_400_000));
+  }
+
+  protected timelineTargetId(): string | null {
+    const show = this.details();
+    if (!show) {
+      return null;
+    }
+    const next = this.timelineEpisodes().find(
+      (episode) =>
+        this.isEpisodeReleased(episode.air_date) &&
+        !this.db.isEpisodeWatched(show.id, episode.season_number, episode.episode_number),
+    );
+    return next ? this.timelineId(next) : null;
+  }
+
+  protected timelineId(episode: TmdbEpisodeSummary): string {
+    return `episode-${episode.season_number}-${episode.episode_number}`;
+  }
+
   private trackedSeriesMetadata(details: TmdbTvDetails): TrackedSeries {
     return {
       tmdbSeriesId: details.id,
@@ -233,6 +260,20 @@ export class SeriesDetailPage {
           details: null,
         })),
       );
+      const timelineSeasons = await Promise.all(
+        details.seasons
+          .filter((season) => season.season_number > 0)
+          .map((season) => firstValueFrom(this.tmdb.getSeason(seriesId, season.season_number))),
+      );
+      this.timelineEpisodes.set(
+        timelineSeasons
+          .flatMap((season) => season.episodes)
+          .sort((a, b) => (a.air_date ?? '').localeCompare(b.air_date ?? '')),
+      );
+      queueMicrotask(() => {
+        const targetId = this.timelineTargetId();
+        document.getElementById(targetId ?? '')?.scrollIntoView({ block: 'nearest', inline: 'center' });
+      });
     } catch {
       this.loadError.set(true);
     } finally {
