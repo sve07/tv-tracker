@@ -39,6 +39,51 @@
   </section>
 
   <section class="mb-8 pb-6 border-b border-border">
+    <h2 class="mb-3">TMDB API Usage</h2>
+    @if (tmdbApiUsage(); as usage) {
+      <p class="text-muted text-[0.85rem] max-w-[60ch]">
+        Last TMDB response: {{ formatApiTimestamp(usage.lastResponseAt) }}
+        @if (usage.status === 'rate-limited') {
+          (rate limited)
+        } @else if (usage.status === 'error') {
+          (request failed)
+        }
+      </p>
+      @if (usage.rateLimit; as rateLimit) {
+        <div class="mt-3 max-w-[30rem]" aria-label="TMDB rate limit status">
+          <div class="flex justify-between gap-3 text-[0.85rem]">
+            <span>Requests available</span>
+            <strong>{{ rateLimit.remaining }} / {{ rateLimit.limit }}</strong>
+          </div>
+          <div
+            class="mt-1 h-2 overflow-hidden rounded-full bg-border"
+            role="progressbar"
+            aria-label="TMDB requests remaining"
+            [attr.aria-valuemin]="0"
+            [attr.aria-valuemax]="rateLimit.limit"
+            [attr.aria-valuenow]="rateLimit.remaining"
+          >
+            <div class="h-full bg-primary" [style.width.%]="rateLimitPercent(rateLimit)"></div>
+          </div>
+          @if (rateLimit.resetAt !== null) {
+            <p class="text-muted text-[0.85rem] mt-2">
+              Limit resets: {{ formatApiTimestamp(rateLimit.resetAt) }}
+            </p>
+          }
+        </div>
+      } @else {
+        <p class="text-muted text-[0.85rem] max-w-[60ch] mt-2">
+          TMDB did not expose rate-limit details for the latest response.
+        </p>
+      }
+    } @else {
+      <p class="text-muted text-[0.85rem] max-w-[60ch]">
+        Usage details will appear after the first TMDB API response in this session.
+      </p>
+    }
+  </section>
+
+  <section class="mb-8 pb-6 border-b border-border">
     <h2 class="mb-3">Notifications</h2>
     <p class="text-muted text-[0.85rem] max-w-[60ch]">
       In-app notifications work whenever the app is open. Background notifications (via periodic

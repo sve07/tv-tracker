@@ -1,7 +1,8 @@
-import { HttpErrorResponse, type HttpInterceptorFn } from '@angular/common/http';
+import { HttpErrorResponse, HttpResponse, type HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { catchError, throwError } from 'rxjs';
+import { catchError, tap, throwError } from 'rxjs';
 import { ToastService } from '../services/toast.service';
+import { TmdbApiUsageService } from '../services/tmdb-api-usage.service';
 import { environment } from '../../../environments/environment';
 
 /**
@@ -11,13 +12,20 @@ import { environment } from '../../../environments/environment';
  */
 export const tmdbErrorInterceptor: HttpInterceptorFn = (req, next) => {
   const toast = inject(ToastService);
+  const usage = inject(TmdbApiUsageService);
 
   if (!req.url.startsWith(environment.tmdbApiBaseUrl)) {
     return next(req);
   }
 
   return next(req).pipe(
+    tap((event) => {
+      if (event instanceof HttpResponse) {
+        usage.recordResponse('success', event.headers);
+      }
+    }),
     catchError((error: HttpErrorResponse) => {
+      usage.recordResponse(error.status === 429 ? 'rate-limited' : 'error', error.headers);
       if (error.status === 0) {
         toast.show('You appear to be offline. Some data may be out of date.', 'error');
       } else if (error.status === 429) {

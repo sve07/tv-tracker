@@ -5,6 +5,10 @@ import { ExportImportService } from '../../core/services/export-import.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { DbService } from '../../core/data/db.service';
 import { ToastService } from '../../core/services/toast.service';
+import {
+  TmdbApiUsageService,
+  type TmdbRateLimit,
+} from '../../core/services/tmdb-api-usage.service';
 import { environment } from '../../../environments/environment';
 
 @Component({
@@ -18,10 +22,12 @@ export class SettingsPage {
   private readonly db = inject(DbService);
   private readonly toast = inject(ToastService);
   private readonly swUpdate = inject(SwUpdate);
+  private readonly tmdbApiUsageService = inject(TmdbApiUsageService);
 
   protected readonly importing = signal(false);
   protected readonly checkingForUpdate = signal(false);
   protected readonly tmdbAccessTokenInput = signal('');
+  protected readonly tmdbApiUsage = this.tmdbApiUsageService.usage;
   private tokenInputInitialized = false;
 
   /** Human-readable build identifier, shown in Settings so it's possible to
@@ -53,6 +59,14 @@ export class SettingsPage {
 
   protected onTmdbAccessTokenInput(event: Event): void {
     this.tmdbAccessTokenInput.set((event.target as HTMLInputElement).value);
+  }
+
+  protected rateLimitPercent(rateLimit: TmdbRateLimit): number {
+    return rateLimit.limit === 0 ? 0 : Math.round((rateLimit.remaining / rateLimit.limit) * 100);
+  }
+
+  protected formatApiTimestamp(value: string | number): string {
+    return new Date(value).toLocaleString();
   }
 
   protected async saveTmdbAccessToken(): Promise<void> {
