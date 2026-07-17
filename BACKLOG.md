@@ -2,7 +2,7 @@
 
 ## Search
 
-- [ ] If I mark an episode, the series should be tracked automatically if not tracked yet
+- [x] If I mark an episode, the series should be tracked automatically if not tracked yet
 
 ## Watch list
 

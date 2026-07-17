@@ -7,7 +7,8 @@ import { DbService } from '../../core/data/db.service';
 import { todayLocalDateKey } from '../../core/utils/date.util';
 import { hideBrokenImage } from '../../core/utils/image.util';
 import { Icon } from '../../shared/icon';
-import type { TmdbEpisodeDetails } from '../../core/models/tmdb.model';
+import type { TrackedSeries } from '../../core/models/domain.model';
+import type { TmdbEpisodeDetails, TmdbTvDetails } from '../../core/models/tmdb.model';
 
 const SWIPE_THRESHOLD_PX = 60;
 
@@ -32,6 +33,7 @@ export class EpisodeDetailPage {
   protected readonly episodeNumber = computed(() => Number(this.paramMap().get('episodeNumber')));
 
   protected readonly episode = signal<TmdbEpisodeDetails | null>(null);
+  private readonly seriesDetails = signal<TmdbTvDetails | null>(null);
   protected readonly loading = signal(true);
   protected readonly loadError = signal(false);
   protected readonly hideBrokenImage = hideBrokenImage;
@@ -144,6 +146,7 @@ export class EpisodeDetailPage {
       this.episodeNumber(),
       episode?.runtime ?? null,
       !this.isWatched(),
+      this.seriesDetails() ? this.trackedSeriesMetadata(this.seriesDetails()!) : undefined,
     );
   }
 
@@ -189,16 +192,31 @@ export class EpisodeDetailPage {
     this.loading.set(true);
     this.loadError.set(false);
     try {
-      const [episode, season] = await Promise.all([
+      const [episode, season, seriesDetails] = await Promise.all([
         firstValueFrom(this.tmdb.getEpisode(seriesId, seasonNumber, episodeNumber)),
         firstValueFrom(this.tmdb.getSeason(seriesId, seasonNumber)),
+        firstValueFrom(this.tmdb.getTvDetails(seriesId)),
       ]);
       this.episode.set(episode);
       this.seasonEpisodeCount.set(season.episodes.length);
+      this.seriesDetails.set(seriesDetails);
     } catch {
       this.loadError.set(true);
     } finally {
       this.loading.set(false);
     }
+  }
+
+  private trackedSeriesMetadata(details: TmdbTvDetails): TrackedSeries {
+    return {
+      tmdbSeriesId: details.id,
+      name: details.name,
+      posterPath: details.poster_path,
+      status: details.status,
+      genres: details.genres.map((genre) => genre.name),
+      numberOfSeasons: details.number_of_seasons,
+      numberOfEpisodes: details.number_of_episodes,
+      trackedAt: new Date().toISOString(),
+    };
   }
 }
