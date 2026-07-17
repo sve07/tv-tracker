@@ -60,6 +60,8 @@ export class WatchlistPage {
 
   /** Off by default — up-to-date-but-still-ongoing shows are hidden unless the user opts in. */
   protected readonly showUpToDate = signal(false);
+  /** Tracked shows with no watched episodes stay out of the active list until expanded. */
+  protected readonly showNotStarted = signal(false);
 
   /** Released episode details, cached per series after the asynchronous TMDB season fetch. */
   private readonly snapshots = signal<Map<number, EpisodeSnapshot>>(new Map());
@@ -119,7 +121,13 @@ export class WatchlistPage {
 
   /** Series with released episodes still to watch — the actual "Watch List". */
   protected readonly inProgress = computed(() =>
-    this.seriesWithProgress().filter((item) => item.releasedCount > 0 && !isCaughtUp(item)),
+    this.seriesWithProgress().filter(
+      (item) => item.watchedCount > 0 && item.releasedCount > 0 && !isCaughtUp(item),
+    ),
+  );
+
+  protected readonly notStarted = computed(() =>
+    this.seriesWithProgress().filter((item) => item.watchedCount === 0),
   );
 
   /** Fully caught-up series whose run has ended. */
@@ -153,6 +161,10 @@ export class WatchlistPage {
 
   protected toggleShowUpToDate(): void {
     this.showUpToDate.update((current) => !current);
+  }
+
+  protected toggleShowNotStarted(): void {
+    this.showNotStarted.update((current) => !current);
   }
 
   protected imageUrl(path: string | null): string | null {
