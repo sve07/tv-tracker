@@ -239,6 +239,7 @@ export class SeriesDetailPage {
   }
 
   private trackedSeriesMetadata(details: TmdbTvDetails): TrackedSeries {
+    const today = todayLocalDateKey();
     return {
       tmdbSeriesId: details.id,
       name: details.name,
@@ -247,6 +248,10 @@ export class SeriesDetailPage {
       genres: details.genres.map((genre) => genre.name),
       numberOfSeasons: details.number_of_seasons,
       numberOfEpisodes: details.number_of_episodes,
+      lastEpisodeAirDate: details.last_episode_to_air?.air_date ?? null,
+      releasedEpisodeCount: this.timelineEpisodes().filter(
+        (episode) => !!episode.air_date && episode.air_date <= today,
+      ).length,
       trackedAt: new Date().toISOString(),
     };
   }
@@ -286,6 +291,18 @@ export class SeriesDetailPage {
           .flatMap((season) => season.episodes)
           .sort((a, b) => (a.air_date ?? '').localeCompare(b.air_date ?? '')),
       );
+      if (this.db.isTracked(details.id)) {
+        const today = todayLocalDateKey();
+        const releasedEpisodes = timelineSeasons
+          .flatMap((season) => season.episodes)
+          .filter((episode) => !!episode.air_date && episode.air_date <= today);
+        const { trackedAt: _trackedAt, ...metadata } = this.trackedSeriesMetadata(details);
+        await this.db.refreshTrackedSeries(details.id, {
+          ...metadata,
+          lastEpisodeAirDate: details.last_episode_to_air?.air_date ?? null,
+          releasedEpisodeCount: releasedEpisodes.length,
+        });
+      }
     } catch {
       this.loadError.set(true);
     } finally {

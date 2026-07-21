@@ -1,114 +1,106 @@
 <section>
   <h1>Watch List</h1>
 
-  @if (inProgress().length === 0 && !anyWatched() && notStarted().length === 0) {
+  @if (!hasSeries()) {
     <div class="empty-state">
       <p>You're not tracking any series yet.</p>
       <a routerLink="/search">Search for a series to track</a>
     </div>
   } @else {
-    @if (inProgress().length > 0) {
-      <div
-        class="grid grid-cols-2 gap-4 mt-4 mb-6 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]"
-      >
-        @for (item of inProgress(); track item.series.tmdbSeriesId) {
-          <ng-container
-            [ngTemplateOutlet]="seriesCard"
-            [ngTemplateOutletContext]="{ $implicit: item }"
-          />
-        }
-      </div>
-    } @else {
-      <p class="empty-state">Nothing in progress right now — search for a series to track.</p>
-    }
+    <ng-container
+      [ngTemplateOutlet]="categorySection"
+      [ngTemplateOutletContext]="{
+        category: 'currentlyWatching',
+        title: 'Currently watching',
+        alwaysVisible: true,
+      }"
+    />
 
-    @if (notStarted().length > 0) {
-      <section class="mt-8 pt-6 border-t border-border">
-        <label class="flex items-center gap-2 text-[0.85rem] text-muted cursor-pointer">
-          <input type="checkbox" [checked]="showNotStarted()" (change)="toggleShowNotStarted()" />
-          Show not started yet ({{ notStarted().length }})
-        </label>
-        @if (showNotStarted()) {
-          <h2 class="text-[0.95rem] text-muted m-0 mt-4">Not started yet</h2>
-          <div
-            class="grid grid-cols-2 gap-4 mt-4 mb-6 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]"
-          >
-            @for (item of notStarted(); track item.series.tmdbSeriesId) {
-              <ng-container
-                [ngTemplateOutlet]="seriesCard"
-                [ngTemplateOutletContext]="{ $implicit: item }"
-              />
-            }
-          </div>
-        }
-      </section>
-    }
-
-    @if (anyWatched()) {
-      <section class="mt-8 pt-6 border-t border-border">
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <h2 class="m-0">Watched</h2>
-          @if (watchedUpToDate().length > 0) {
-            <label class="flex items-center gap-2 text-[0.85rem] text-muted cursor-pointer">
-              <input type="checkbox" [checked]="showUpToDate()" (change)="toggleShowUpToDate()" />
-              Show up-to-date shows
-            </label>
-          }
-        </div>
-
-        @if (showUpToDate() && watchedUpToDate().length > 0) {
-          <h3 class="text-[0.95rem] text-muted m-0 mt-4">Up to date</h3>
-          <div
-            class="grid grid-cols-2 gap-4 mt-4 mb-6 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]"
-          >
-            @for (item of watchedUpToDate(); track item.series.tmdbSeriesId) {
-              <ng-container
-                [ngTemplateOutlet]="seriesCard"
-                [ngTemplateOutletContext]="{ $implicit: item }"
-              />
-            }
-          </div>
-        }
-
-        @if (watchedEnded().length > 0) {
-          <h3 class="text-[0.95rem] text-muted m-0">Ended</h3>
-          <div
-            class="grid grid-cols-2 gap-4 mt-4 mb-6 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]"
-          >
-            @for (item of watchedEnded(); track item.series.tmdbSeriesId) {
-              <ng-container
-                [ngTemplateOutlet]="seriesCard"
-                [ngTemplateOutletContext]="{ $implicit: item }"
-              />
-            }
-          </div>
-        }
-
-        @if (watchedCanceled().length > 0) {
-          <h3 class="text-[0.95rem] text-muted m-0">Canceled</h3>
-          <div
-            class="grid grid-cols-2 gap-4 mt-4 mb-6 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]"
-          >
-            @for (item of watchedCanceled(); track item.series.tmdbSeriesId) {
-              <ng-container
-                [ngTemplateOutlet]="seriesCard"
-                [ngTemplateOutletContext]="{ $implicit: item }"
-              />
-            }
-          </div>
-        }
-      </section>
-    }
+    <ng-container
+      [ngTemplateOutlet]="categorySection"
+      [ngTemplateOutletContext]="{
+        category: 'notStarted',
+        title: 'Not started yet',
+        alwaysVisible: false,
+      }"
+    />
+    <ng-container
+      [ngTemplateOutlet]="categorySection"
+      [ngTemplateOutletContext]="{
+        category: 'upToDate',
+        title: 'Up-to-date',
+        alwaysVisible: false,
+      }"
+    />
+    <ng-container
+      [ngTemplateOutlet]="categorySection"
+      [ngTemplateOutletContext]="{
+        category: 'watchedEnded',
+        title: 'Watched: Ended',
+        alwaysVisible: false,
+      }"
+    />
+    <ng-container
+      [ngTemplateOutlet]="categorySection"
+      [ngTemplateOutletContext]="{
+        category: 'watchedCanceled',
+        title: 'Watched: Canceled',
+        alwaysVisible: false,
+      }"
+    />
   }
+
+  <ng-template
+    #categorySection
+    let-category="category"
+    let-title="title"
+    let-alwaysVisible="alwaysVisible"
+  >
+    <section class="mt-8 pt-6 border-t border-border first:mt-4 first:pt-0 first:border-t-0">
+      <button
+        type="button"
+        class="w-full flex items-center justify-between gap-3 text-left bg-transparent border-0 text-inherit cursor-pointer p-0"
+        [attr.aria-expanded]="isExpanded(category)"
+        (click)="toggleCategory(category)"
+      >
+        <h2 class="m-0 text-lg">
+          {{ title }} <span class="text-muted text-sm">({{ categoryCount(category) }})</span>
+        </h2>
+        <span class="text-muted" aria-hidden="true">{{ isExpanded(category) ? '−' : '+' }}</span>
+      </button>
+
+      @if (isExpanded(category)) {
+        @if (itemsFor(category).length > 0) {
+          <div
+            class="grid grid-cols-2 gap-4 mt-4 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]"
+          >
+            @for (item of itemsFor(category); track item.series.tmdbSeriesId) {
+              <ng-container
+                [ngTemplateOutlet]="seriesCard"
+                [ngTemplateOutletContext]="{ $implicit: item }"
+              />
+            }
+          </div>
+          @if (hasMore(category)) {
+            <button
+              type="button"
+              class="mt-4 px-4 py-2 rounded border border-border bg-surface text-inherit cursor-pointer hover:border-primary"
+              (click)="loadMore(category)"
+            >
+              Load more
+            </button>
+          }
+        } @else if (alwaysVisible) {
+          <p class="empty-state mt-4">Nothing currently watching right now.</p>
+        }
+      }
+    </section>
+  </ng-template>
 
   <ng-template #seriesCard let-item>
     <a
       class="flex flex-col bg-surface border border-border rounded-lg overflow-hidden no-underline text-inherit hover:border-primary"
-      [routerLink]="
-        item.nextEpisode
-          ? ['/series', item.series.tmdbSeriesId, 'season', item.nextEpisode.season_number, 'episode', item.nextEpisode.episode_number]
-          : ['/series', item.series.tmdbSeriesId]
-      "
+      [routerLink]="['/series', item.series.tmdbSeriesId]"
       [queryParams]="{ returnTo: '/watchlist' }"
     >
       @if (imageUrl(item.series.posterPath); as posterUrl) {
@@ -126,22 +118,13 @@
       <div class="p-3 flex flex-col gap-2">
         <h3 class="m-0 text-base">{{ item.series.name }}</h3>
         <p class="m-0 text-[0.8rem] text-muted">{{ item.series.status || 'Unknown status' }}</p>
-        @if (item.nextEpisode) {
-          <p class="m-0 text-[0.8rem] font-semibold text-primary">
-            Next: {{ nextEpisodeLabel(item.nextEpisode) }}
-          </p>
-        }
         <div class="flex flex-col gap-1">
           <div class="h-[6px] rounded-full bg-surface-raised overflow-hidden">
             <div
               class="h-full rounded-[inherit]"
-              [class.bg-primary]="
-                progressPercent(item.watchedCount, item.series.numberOfEpisodes) < 100
-              "
-              [class.bg-success]="
-                progressPercent(item.watchedCount, item.series.numberOfEpisodes) >= 100
-              "
-              [style.width.%]="progressPercent(item.watchedCount, item.series.numberOfEpisodes)"
+              [class.bg-primary]="progressPercent(item.watchedCount, item.releasedCount) < 100"
+              [class.bg-success]="progressPercent(item.watchedCount, item.releasedCount) >= 100"
+              [style.width.%]="progressPercent(item.watchedCount, item.releasedCount)"
             ></div>
           </div>
         </div>

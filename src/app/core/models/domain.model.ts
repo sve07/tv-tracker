@@ -15,6 +15,10 @@ export interface TrackedSeries {
   genres: string[];
   numberOfSeasons: number;
   numberOfEpisodes: number;
+  /** Cached latest released episode date, refreshed when visiting the series. */
+  lastEpisodeAirDate?: string | null;
+  /** Cached number of released non-special episodes, refreshed when viewing the series. */
+  releasedEpisodeCount?: number;
   /** ISO date the user started tracking this series. */
   trackedAt: string;
 }

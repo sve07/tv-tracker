@@ -60,6 +60,24 @@ export class DbService {
     await this.db.trackedSeries.put(series);
   }
 
+  /** Refreshes cached TMDB metadata for an existing tracked series only. */
+  async refreshTrackedSeries(
+    tmdbSeriesId: number,
+    metadata: Pick<
+      TrackedSeries,
+      | 'name'
+      | 'posterPath'
+      | 'status'
+      | 'genres'
+      | 'numberOfSeasons'
+      | 'numberOfEpisodes'
+      | 'lastEpisodeAirDate'
+      | 'releasedEpisodeCount'
+    >,
+  ): Promise<void> {
+    await this.db.trackedSeries.update(tmdbSeriesId, metadata);
+  }
+
   /**
    * Adds a series only when it is not already tracked. This deliberately does
    * not overwrite an existing record, so manually tracked series retain their
